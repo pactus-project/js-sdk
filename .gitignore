@@ -21,3 +21,10 @@ yarn-error.log*
 *.swp
 .env
 .env.local
+
+# AI agents
+.ai
+.entire
+.claude
+.agent
+.cursor
