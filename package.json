@@ -1,5 +1,5 @@
 {
-  "name": "@pactus/wallet-sdk",
+  "name": "@pactus/sdk",
   "version": "1.0.0",
   "description": "TypeScript SDK for creating, managing, and interacting with Pactus blockchain wallets",
   "license": "MIT",

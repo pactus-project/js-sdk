@@ -10,33 +10,17 @@ Thank you for considering contributing to the Pactus JS SDK!
 ## Development Workflow
 
 1. Fork and clone the repository.
-2. Create a feature branch: `git checkout -b feat/my-change`.
-3. Install dependencies: `npm install`.
-4. Make your changes, with tests.
-5. Make sure everything passes:
-   ```bash
-   npm run type-check
-   npm run lint
-   npm run build
-   npm test
-   ```
-6. Commit using Conventional Commits and open a pull request.
-
-## Code Guidelines
-
-- Follow clean code principles and TypeScript best practices.
-- Keep type safety; do not weaken types to silence errors.
-- Write tests for new behavior. A bug fix should include a test that fails without the fix.
-- Document public APIs with JSDoc.
-- Keep formatting consistent (`npm run lint` and Prettier).
+2. Create a branch: `git checkout -b feat/my-change`.
+3. Follow the [development guide](docs/development.md) for setup, scripts, and tests.
+4. Make your changes with tests.
+5. Commit using [Conventional Commits](https://www.conventionalcommits.org): `type(scope): description`.
+6. Open a pull request against `main`.
 
 ## Commit Messages
 
-Use [Conventional Commits](https://www.conventionalcommits.org/):
-
 - Format: `type(scope): description`
 - Types: `fix`, `feat`, `docs`, `test`, `build`, `ci`, `perf`, `refactor`, `style`, `chore`.
-- Keep the subject under 50 characters, lowercase, imperative mood, no ending punctuation.
+- Keep the subject short, lowercase, no ending punctuation.
 
 Examples:
 
@@ -44,8 +28,6 @@ Examples:
 - `fix(storage): handle empty string values in localStorage`
 - `test(encrypter): cover argon2 parameter edge cases`
 
-## Releases
+## Update Dependencies
 
-This package is published to npm as `@pactus/wallet-sdk`. Maintainers publish a new version by
-bumping the version in `package.json` and creating a GitHub Release, which triggers the publish
-workflow.
+Keep dependencies up to date. Follow the [dependency updates guide](docs/dependency-updates.md).
