@@ -22,7 +22,7 @@ export function generateUUID(): string {
     .slice(0, 36);
 }
 
-export function sprintf(format: string, ...args: (string | number)[]): string {
+export function sprintf(format: string, ...args: Array<string | number>): string {
   return format.replace(/%s|%d/g, () => String(args.shift()));
 }
 

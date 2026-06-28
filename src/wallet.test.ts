@@ -7,8 +7,8 @@ import { MnemonicValues } from './types/vault';
 import { NetworkValues } from './types/wallet_info';
 import { getWordCount } from './utils';
 import { Wallet } from './wallet';
-import { IStorage } from './storage/storage';
-import { WalletCore } from '@trustwallet/wallet-core';
+import type { IStorage } from './storage/storage';
+import type { WalletCore } from '@trustwallet/wallet-core';
 // Jest typings setup
 declare global {
   // eslint-disable-next-line @typescript-eslint/no-namespace

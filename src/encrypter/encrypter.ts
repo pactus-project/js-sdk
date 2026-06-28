@@ -1,5 +1,7 @@
 import * as crypto from 'crypto';
+
 import * as argon2 from 'argon2-browser';
+
 import { Params } from './params';
 
 export const ParameterKey = {

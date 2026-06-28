@@ -1,4 +1,4 @@
-import { IAsyncStorage } from './async-storage';
+import type { IAsyncStorage } from './async-storage';
 
 /**
  * IndexedDB implementation of IAsyncStorage
