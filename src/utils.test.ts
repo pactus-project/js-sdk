@@ -1,5 +1,5 @@
 import { initWasm } from '@trustwallet/wallet-core';
-import { IStorage } from './storage/storage';
+import type { IStorage } from './storage/storage';
 import { MemoryStorage } from './storage/memory-storage';
 import { NetworkValues } from './types/wallet_info';
 import { encodeBech32WithType, sprintf } from './utils';

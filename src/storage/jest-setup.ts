@@ -1,4 +1,5 @@
 import { TextDecoder, TextEncoder } from 'util';
+
 import { indexedDB, IDBKeyRange } from 'fake-indexeddb';
 
 // jsdom does not provide TextEncoder/TextDecoder, which @trustwallet/wallet-core

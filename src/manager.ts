@@ -1,10 +1,13 @@
+import type { WalletCore } from '@trustwallet/wallet-core';
+
 import { StorageError } from './error';
 import { StorageKey } from './storage-key';
-import { MnemonicStrength, MnemonicValues } from './types/vault';
-import { NetworkType, NetworkValues, WalletID } from './types/wallet_info';
+import type { MnemonicStrength } from './types/vault';
+import { MnemonicValues } from './types/vault';
+import type { NetworkType, WalletID } from './types/wallet_info';
+import { NetworkValues } from './types/wallet_info';
 import { Wallet } from './wallet';
-import { IStorage } from './storage/storage';
-import { WalletCore } from '@trustwallet/wallet-core';
+import type { IStorage } from './storage/storage';
 
 /**
  * WalletManager

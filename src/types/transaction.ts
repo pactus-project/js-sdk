@@ -1,4 +1,4 @@
-import { Amount } from './amount';
+import type { Amount } from './amount';
 
 export interface TransferTransaction {
   sender: string;

@@ -5,8 +5,9 @@
 
 // Core wallet functionality
 import { initWasm } from '@trustwallet/wallet-core';
+
 import { WalletManager } from './manager';
-import { IStorage } from './storage/storage';
+import type { IStorage } from './storage/storage';
 
 export * from './types/wallet_info';
 export * from './wallet';

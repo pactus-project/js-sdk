@@ -90,7 +90,13 @@ const sharedRules = {
   ],
 
   // Import rules
-  'import/order': 'off',
+  'import/order': [
+    'error',
+    {
+      'groups': ['builtin', 'external', 'internal', 'parent', 'sibling', 'index'],
+      'newlines-between': 'always',
+    },
+  ],
   'import/newline-after-import': ['error', { count: 1 }],
   'import/no-duplicates': [
     'error',
@@ -184,7 +190,7 @@ export default [
         },
       ],
       '@typescript-eslint/consistent-type-definitions': ['error', 'interface'],
-      '@typescript-eslint/consistent-type-imports': 'off',
+      '@typescript-eslint/consistent-type-imports': 'error',
       '@typescript-eslint/naming-convention': [
         'error',
 
@@ -258,6 +264,7 @@ export default [
       ],
       '@typescript-eslint/no-non-null-assertion': 'error',
       '@typescript-eslint/no-namespace': 'error',
+      '@typescript-eslint/array-type': ['error', { default: 'array-simple' }],
     },
   },
 
