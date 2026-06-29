@@ -115,4 +115,20 @@ describe('Amount class', () => {
       );
     });
   });
+
+  describe('serialization', () => {
+    test('serializes to its nanoPAC string via JSON.stringify', () => {
+      const amount = new Amount('1000000000');
+
+      expect(JSON.stringify(amount)).toBe('"1000000000"');
+      expect(JSON.stringify({ fee: amount })).toBe('{"fee":"1000000000"}');
+    });
+
+    test('round-trips a large value through JSON', () => {
+      const original = new Amount('9007199254740993');
+      const restored = new Amount(JSON.parse(JSON.stringify(original)) as string);
+
+      expect(restored.equals(original)).toBe(true);
+    });
+  });
 });

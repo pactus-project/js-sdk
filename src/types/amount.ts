@@ -80,6 +80,18 @@ export class Amount {
   }
 
   /**
+   * Serialize the amount for `JSON.stringify`.
+   *
+   * Returns the nanoPAC value as a string. Without this, `JSON.stringify` would
+   * throw a `TypeError` because the internal value is a `bigint`, which cannot
+   * be serialized natively.
+   * @returns Amount value as string (nanoPAC)
+   */
+  toJSON(): string {
+    return this.value.toString();
+  }
+
+  /**
    * Get amount value in PAC units
    * @returns Amount value as number (PAC)
    */
