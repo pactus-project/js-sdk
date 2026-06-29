@@ -1,41 +1,82 @@
 /**
- * Amount class for handling PAC and NanoPAC conversions
- * Based on the Python SDK implementation but maintaining TypeScript's string-based storage
+ * Amount class for handling PAC and NanoPAC conversions.
+ *
+ * In the Pactus blockchain an Amount is an int64 of nanoPAC (see the Go SDK:
+ * `type Amount int64`). JavaScript's only native exact-integer type wide enough
+ * for int64 is `bigint` — `number` loses precision above 2^53, while the maximum
+ * amount is 4.2e16 nanoPAC. The value is therefore stored as a `bigint` and
+ * arithmetic runs directly on it, with no per-operation string conversions.
  */
 
 // Constants
 export const NANO_PAC_PER_PAC = 1e9;
 export const MAX_NANO_PAC = 42e6 * NANO_PAC_PER_PAC;
 
+const MAX_NANO_PAC_BIG = BigInt(MAX_NANO_PAC);
+
 /**
  * Amount represents the atomic unit in the Pactus blockchain.
  * Each unit is equal to 1e-9 of a PAC.
  *
- * This class provides a type-safe way to handle amounts while keeping
- * the string-based representation internally for precision.
+ * This class provides a type-safe way to handle amounts, storing the value
+ * internally as a native `bigint` (nanoPAC) for exact int64 precision.
  */
 export class Amount {
-  private value: string;
+  private value: bigint;
 
   /**
    * Create a new Amount instance
-   * @param value - String or numeric value in nanoPAC
+   * @param value - Value in nanoPAC as a string, number, or bigint
    */
-  constructor(value: string | number = '0') {
-    this.value = typeof value === 'number' ? value.toString() : value;
+  constructor(value: string | number | bigint = 0n) {
+    const nanoPac = Amount.parse(value);
 
-    // Validate the value is a valid integer string
-    if (!Amount.isValid(this.value)) {
+    if (nanoPac === null) {
       throw new Error(`Invalid amount: ${value}`);
     }
+
+    this.value = nanoPac;
   }
 
   /**
-   * Get the internal string value
+   * Parse and validate a nanoPAC value into a bigint.
+   * @param value Value in nanoPAC as a string, number, or bigint
+   * @returns The value as a bigint, or null if it is not a valid amount
+   */
+  private static parse(value: string | number | bigint): bigint | null {
+    let nanoPac: bigint;
+
+    try {
+      if (typeof value === 'bigint') {
+        nanoPac = value;
+      } else if (typeof value === 'number') {
+        if (!Number.isInteger(value)) {
+          return null;
+        }
+
+        nanoPac = BigInt(value);
+      } else {
+        const trimmed = value.trim();
+
+        if (!/^\d+$/.test(trimmed)) {
+          return null;
+        }
+
+        nanoPac = BigInt(trimmed);
+      }
+    } catch {
+      return null;
+    }
+
+    return nanoPac >= 0n && nanoPac <= MAX_NANO_PAC_BIG ? nanoPac : null;
+  }
+
+  /**
+   * Get the internal value as a string
    * @returns Amount value as string (nanoPAC)
    */
   toString(): string {
-    return this.value;
+    return this.value.toString();
   }
 
   /**
@@ -84,9 +125,7 @@ export class Amount {
    * @returns New Amount instance with the sum
    */
   add(other: Amount): Amount {
-    const sum = BigInt(this.value) + BigInt(other.value);
-
-    return Amount.fromNanoPac(sum.toString());
+    return Amount.fromNanoPac(this.value + other.value);
   }
 
   /**
@@ -96,16 +135,11 @@ export class Amount {
    * @throws Error if result would be negative
    */
   subtract(other: Amount): Amount {
-    const value1 = BigInt(this.value);
-    const value2 = BigInt(other.value);
-
-    if (value1 < value2) {
+    if (this.value < other.value) {
       throw new Error('Amount cannot be negative');
     }
 
-    const difference = value1 - value2;
-
-    return Amount.fromNanoPac(difference.toString());
+    return Amount.fromNanoPac(this.value - other.value);
   }
 
   /**
@@ -114,7 +148,7 @@ export class Amount {
    * @returns true if this amount is greater
    */
   greaterThan(other: Amount): boolean {
-    return BigInt(this.value) > BigInt(other.value);
+    return this.value > other.value;
   }
 
   /**
@@ -123,7 +157,7 @@ export class Amount {
    * @returns true if this amount is less
    */
   lessThan(other: Amount): boolean {
-    return BigInt(this.value) < BigInt(other.value);
+    return this.value < other.value;
   }
 
   /**
@@ -131,8 +165,8 @@ export class Amount {
    * @param nanoPac Integer value in nanoPAC units
    * @returns New Amount instance
    */
-  static fromNanoPac(nanoPac: string | number): Amount {
-    return new Amount(nanoPac.toString());
+  static fromNanoPac(nanoPac: string | number | bigint): Amount {
+    return new Amount(nanoPac);
   }
 
   /**
@@ -173,11 +207,8 @@ export class Amount {
    * @param amount Value to validate
    * @returns true if valid, false otherwise
    */
-  static isValid(amount: string | number): boolean {
-    const amountStr = amount.toString();
-    const nanoPac = Number(amountStr);
-
-    return Number.isInteger(nanoPac) && nanoPac >= 0 && nanoPac <= MAX_NANO_PAC;
+  static isValid(amount: string | number | bigint): boolean {
+    return Amount.parse(amount) !== null;
   }
 
   /**
@@ -185,6 +216,6 @@ export class Amount {
    * @returns New Amount instance with zero value
    */
   static zero(): Amount {
-    return new Amount('0');
+    return new Amount(0n);
   }
 }
