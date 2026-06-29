@@ -8,7 +8,14 @@ describe('IndexedDBStorage', () => {
   });
 
   afterEach(async () => {
-    indexedDB.deleteDatabase('PactusWalletStorage');
+    // Close the open connection first, otherwise deleteDatabase is blocked by it
+    // and the next test's open request never resolves.
+    await storage.close();
+    await new Promise<void>((resolve, reject) => {
+      const request = indexedDB.deleteDatabase('PactusWalletStorage');
+      request.onsuccess = () => resolve();
+      request.onerror = () => reject(request.error);
+    });
   });
 
   describe('basic functionality', () => {
