@@ -37,17 +37,13 @@ const localStorageMock = (() => {
   };
 })();
 
-// Mock global window object
-Object.defineProperty(global, 'window', {
-  value: {
-    localStorage: localStorageMock,
-  },
-  writable: true,
-});
-
-// Mock global localStorage
+// Mock global localStorage. The jsdom environment already provides `window`
+// (which is non-configurable under jest-environment-jsdom 30+, so it must not
+// be redefined); only `localStorage` needs to be replaced with the spyable mock
+// that the storage code and tests rely on.
 Object.defineProperty(global, 'localStorage', {
   value: localStorageMock,
+  configurable: true,
   writable: true,
 });
 

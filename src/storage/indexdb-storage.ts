@@ -65,4 +65,15 @@ export class IndexedDBStorage implements IAsyncStorage {
   async delete(key: string): Promise<void> {
     await this.withStore('readwrite', store => store.delete(key));
   }
+
+  /**
+   * Closes the underlying IndexedDB connection. After calling this the instance
+   * should no longer be used. Closing releases the connection so the database
+   * can be deleted or upgraded without being blocked by an open handle.
+   */
+  async close(): Promise<void> {
+    const db = await this.dbPromise;
+
+    db.close();
+  }
 }
