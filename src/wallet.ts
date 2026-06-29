@@ -19,10 +19,9 @@ import { Amount } from './types/amount';
 import type {
   RawTransferTransaction,
   TransferTransaction,
-  BondTransaction } from './types/transaction';
-import {
-  TransactionDetailsType
+  BondTransaction,
 } from './types/transaction';
+import { TransactionDetailsType } from './types/transaction';
 
 let PactusOpenRPC;
 
@@ -273,8 +272,11 @@ export class Wallet {
    * @returns AddressInfo object containing the generated address and metadata
    */
   async createAddress(label: string, password: string): Promise<AddressInfo> {
-    const addressInfo =
-      await this.deriveAddressAtIndex(this.ledger.purposes.purposeBIP44.nextEd25519Index, label, password);
+    const addressInfo = await this.deriveAddressAtIndex(
+      this.ledger.purposes.purposeBIP44.nextEd25519Index,
+      label,
+      password
+    );
 
     this.ledger.addresses.set(addressInfo.address, addressInfo);
     this.ledger.purposes.purposeBIP44.nextEd25519Index++;
@@ -290,7 +292,11 @@ export class Wallet {
    * @param password Password for wallet encryption
    * @returns Promise<AddressInfo> - The derived address information
    */
-  private async deriveAddressAtIndex(index: number, label: string, password: string): Promise<AddressInfo> {
+  private async deriveAddressAtIndex(
+    index: number,
+    label: string,
+    password: string
+  ): Promise<AddressInfo> {
     const derivationPath = sprintf(
       "m/44'/%d'/3'/%d'",
       this.ledger.coinType.toString(),

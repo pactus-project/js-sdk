@@ -571,13 +571,7 @@ describe('Address Recovery', () => {
     storage = new MemoryStorage();
     const testMnemonic =
       'abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon cactus';
-    wallet = await Wallet.restore(
-      core,
-      storage,
-      testMnemonic,
-      password,
-      NetworkValues.MAINNET
-    );
+    wallet = await Wallet.restore(core, storage, testMnemonic, password, NetworkValues.MAINNET);
   });
 
   it('recover addresses from a fresh wallet without any active addresses', async () => {
