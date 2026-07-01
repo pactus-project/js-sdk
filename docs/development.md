@@ -17,7 +17,6 @@ npm install
 | Command                 | Description                             |
 | ----------------------- | --------------------------------------- |
 | `npm run build`         | Compile TypeScript to `dist/`           |
-| `npm run watch`         | Rebuild on file changes                 |
 | `npm run type-check`    | Type-check without emitting files       |
 | `npm test`              | Run all tests                           |
 | `npm run test:coverage` | Run tests with coverage report          |
