@@ -9,19 +9,19 @@ import { MnemonicError, StorageError, NetworkError } from './error';
 import { StorageKey } from './storage-key';
 import type { AddressInfo, Purposes } from './types/ledger';
 import { Ledger } from './types/ledger';
-import type { KeyStore, MnemonicStrength } from './types/vault';
-import { MnemonicValues, Vault } from './types/vault';
+import type { KeyStore, MnemonicStrength } from './vault/vault';
+import { MnemonicValues, Vault } from './vault/vault';
 import type { NetworkType, WalletID } from './types/wallet_info';
 import { NetworkValues, WalletInfo } from './types/wallet_info';
 import { encodeBech32WithType, generateUUID, sprintf } from './utils';
 import type { IStorage } from './storage/storage';
-import { Amount } from './types/amount';
+import { Amount } from '../types/amount';
 import type {
   RawTransferTransaction,
   TransferTransaction,
   BondTransaction,
-} from './types/transaction';
-import { TransactionDetailsType } from './types/transaction';
+} from '../transaction/transaction';
+import { TransactionDetailsType } from '../transaction/transaction';
 
 let PactusOpenRPC;
 

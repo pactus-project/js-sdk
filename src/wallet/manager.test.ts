@@ -4,7 +4,7 @@ import * as bip39 from 'bip39';
 import { StorageError } from './error';
 import { WalletManager } from './manager';
 import { MemoryStorage } from './storage/memory-storage';
-import { MnemonicValues } from './types/vault';
+import { MnemonicValues } from './vault/vault';
 import { NetworkValues } from './types/wallet_info';
 import { generateUUID } from './utils';
 
