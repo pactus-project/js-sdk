@@ -3,7 +3,7 @@ import * as bip39 from 'bip39';
 import { MnemonicError } from './error';
 import { MemoryStorage } from './storage/memory-storage';
 import { StorageKey } from './storage-key';
-import { MnemonicValues } from './types/vault';
+import { MnemonicValues } from './vault/vault';
 import { NetworkValues } from './types/wallet_info';
 import { getWordCount } from './utils';
 import { Wallet } from './wallet';

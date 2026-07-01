@@ -4,7 +4,7 @@ import { MemoryStorage } from './storage/memory-storage';
 import { NetworkValues } from './types/wallet_info';
 import { encodeBech32WithType, sprintf } from './utils';
 import { Wallet } from './wallet';
-import { MnemonicValues } from './types/vault';
+import { MnemonicValues } from './vault/vault';
 
 describe('sprintf function', () => {
   test.each([

@@ -2,8 +2,8 @@ import type { WalletCore } from '@trustwallet/wallet-core';
 
 import { StorageError } from './error';
 import { StorageKey } from './storage-key';
-import type { MnemonicStrength } from './types/vault';
-import { MnemonicValues } from './types/vault';
+import type { MnemonicStrength } from './vault/vault';
+import { MnemonicValues } from './vault/vault';
 import type { NetworkType, WalletID } from './types/wallet_info';
 import { NetworkValues } from './types/wallet_info';
 import { Wallet } from './wallet';
@@ -15,9 +15,7 @@ import type { IStorage } from './storage/storage';
  */
 export class WalletManager {
   private core: WalletCore;
-
   private storage: IStorage;
-
   private walletIDs: WalletID[];
 
   /**

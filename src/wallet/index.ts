@@ -10,11 +10,11 @@ import { WalletManager } from './manager';
 import type { IStorage } from './storage/storage';
 
 export * from './types/wallet_info';
-export * from './wallet';
+export * from '.';
 export * from './storage/storage';
 export * from './manager';
 export * from './error';
-export * from './types/amount';
+export * from '../types/amount';
 
 /**
  * Initialize the wallet SDK with a custom storage implementation
