@@ -4,6 +4,14 @@ import * as bip39 from 'bip39';
 import type { WalletCore } from '@trustwallet/wallet-core';
 import type { HDWallet } from '@trustwallet/wallet-core/dist/src/wallet-core';
 
+import { Amount } from '../types/amount';
+import type {
+  RawTransferTransaction,
+  TransferTransaction,
+  BondTransaction,
+} from '../transaction/transaction';
+import { TransactionDetailsType } from '../transaction/transaction';
+
 import { Encrypter } from './encrypter/encrypter';
 import { MnemonicError, StorageError, NetworkError } from './error';
 import { StorageKey } from './storage-key';
@@ -15,13 +23,6 @@ import type { NetworkType, WalletID } from './types/wallet_info';
 import { NetworkValues, WalletInfo } from './types/wallet_info';
 import { encodeBech32WithType, generateUUID, sprintf } from './utils';
 import type { IStorage } from './storage/storage';
-import { Amount } from '../types/amount';
-import type {
-  RawTransferTransaction,
-  TransferTransaction,
-  BondTransaction,
-} from '../transaction/transaction';
-import { TransactionDetailsType } from '../transaction/transaction';
 
 let PactusOpenRPC;
 
