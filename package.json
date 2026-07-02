@@ -46,6 +46,7 @@
     "argon2-browser": "^1.18.0",
     "bech32": "^2.0.0",
     "bip39": "^3.1.0",
+    "blakejs": "^1.2.1",
     "pactus-jsonrpc": "^1.15.6"
   },
   "devDependencies": {
