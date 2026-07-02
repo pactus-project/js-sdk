@@ -1,4 +1,4 @@
-import { appendUint32, readUint32 } from '../encoding';
+import type { Writer, Reader } from '../encoding';
 
 /**
  * Height represents a block height in the Pactus blockchain.
@@ -13,15 +13,13 @@ export class Height {
     this.value = value >>> 0;
   }
 
-  /** Encode the height as uint32 (little-endian) and append to the buffer. */
-  encode(buf: Uint8Array): Uint8Array {
-    return appendUint32(buf, this.value);
+  /** Encode the height as uint32 (little-endian) to the writer. */
+  encode(writer: Writer): void {
+    writer.writeUint32(this.value);
   }
 
-  /** Decode a Height from bytes. Returns [Height, remaining_buf]. */
-  static decode(buf: Uint8Array): [Height, Uint8Array] {
-    const [val, remaining] = readUint32(buf);
-
-    return [new Height(val), remaining];
+  /** Decode a Height from the reader. */
+  static decode(reader: Reader): Height {
+    return new Height(reader.readUint32());
   }
 }

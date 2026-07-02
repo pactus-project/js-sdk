@@ -1,6 +1,6 @@
 import { bech32m } from 'bech32';
 
-import { appendUint8, readUint8, appendFixedBytes, readFixedBytes } from '../encoding';
+import type { Writer, Reader } from '../encoding';
 
 const ADDRESS_SIZE = 21;
 const TREASURY_ADDRESS_STRING = '000000000000000000000000000000000000000000';
@@ -110,25 +110,25 @@ export class Address {
     return this.addressType() === AddressType.VALIDATOR;
   }
 
-  /** Encode the address and append to the buffer. */
-  encode(buf: Uint8Array): Uint8Array {
+  /** Encode the address to the writer. */
+  encode(writer: Writer): void {
     if (this.isTreasuryAddress()) {
-      return appendUint8(buf, AddressType.TREASURY);
+      writer.writeUint8(AddressType.TREASURY);
+    } else {
+      writer.writeFixedBytes(this.rawBytes());
     }
-
-    return appendFixedBytes(buf, this.rawBytes());
   }
 
-  /** Decode an Address from bytes. Returns [Address, remaining_buf]. */
-  static decode(buf: Uint8Array): [Address, Uint8Array] {
-    const [addrType, remaining] = readUint8(buf);
+  /** Decode an Address from the reader. */
+  static decode(reader: Reader): Address {
+    const addrType = reader.readUint8();
 
     if (addrType === AddressType.TREASURY) {
-      return [new Address(AddressType.TREASURY, new Uint8Array(20)), remaining];
+      return new Address(AddressType.TREASURY, new Uint8Array(20));
     }
 
-    const [data, rest] = readFixedBytes(remaining, 20);
+    const data = reader.readFixedBytes(20);
 
-    return [new Address(addrType as AddressType, data), rest];
+    return new Address(addrType as AddressType, data);
   }
 }

@@ -1,172 +1,180 @@
 /**
- * Concatenate two Uint8Arrays into a new Uint8Array.
- */
-function concat(a: Uint8Array, b: Uint8Array): Uint8Array {
-  const result = new Uint8Array(a.length + b.length);
-
-  result.set(a);
-  result.set(b, a.length);
-
-  return result;
-}
-
-/**
- * Append a uint8 value (little-endian) to the buffer.
- */
-export function appendUint8(buf: Uint8Array, val: number): Uint8Array {
-  const byte = new Uint8Array(1);
-
-  byte[0] = val & 0xff;
-
-  return concat(buf, byte);
-}
-
-/**
- * Append a uint16 value (little-endian) to the buffer.
- */
-export function appendUint16(buf: Uint8Array, val: number): Uint8Array {
-  const bytes = new Uint8Array(2);
-
-  bytes[0] = val & 0xff;
-  bytes[1] = (val >> 8) & 0xff;
-
-  return concat(buf, bytes);
-}
-
-/**
- * Append a uint32 value (little-endian) to the buffer.
- */
-export function appendUint32(buf: Uint8Array, val: number): Uint8Array {
-  const bytes = new Uint8Array(4);
-
-  bytes[0] = val & 0xff;
-  bytes[1] = (val >> 8) & 0xff;
-  bytes[2] = (val >> 16) & 0xff;
-  bytes[3] = (val >> 24) & 0xff;
-
-  return concat(buf, bytes);
-}
-
-/**
- * Append a variable-length integer to the buffer.
+ * Writer accumulates bytes in a streaming fashion.
  *
- * Uses a 7-bit continuation scheme: values 0–0x7f fit in one byte;
- * larger values use multiple bytes with the high bit set on all but the last byte.
- *
- * Accepts both `number` and `bigint`. Returns a buffer with the encoded varint.
+ * Equivalent to Python's io.Writer pattern: each write call appends
+ * to an internal buffer, eliminating O(n^2) concatenation.
  */
-export function appendVarInt(buf: Uint8Array, val: number | bigint): Uint8Array {
-  let v = BigInt(val);
+export class Writer {
+  private chunks: Uint8Array[] = [];
+  private _len = 0;
 
-  const parts: number[] = [];
-
-  while (v >= 0x80n) {
-    const n = Number((v & 0x7fn) | 0x80n);
-
-    parts.push(n);
-    v >>= 7n;
+  /** Total bytes written so far. */
+  get length(): number {
+    return this._len;
   }
 
-  parts.push(Number(v));
+  /** Append raw bytes. */
+  private write(data: Uint8Array): void {
+    this.chunks.push(data);
+    this._len += data.length;
+  }
 
-  return concat(buf, new Uint8Array(parts));
-}
+  /** Write a uint8 value (little-endian). */
+  writeUint8(val: number): void {
+    const byte = new Uint8Array(1);
 
-/**
- * Append a string to the buffer.
- *
- * The string is encoded as a varint length prefix followed by UTF-8 encoded bytes.
- */
-export function appendStr(buf: Uint8Array, val: string): Uint8Array {
-  const encoded = new TextEncoder().encode(val);
+    byte[0] = val & 0xff;
+    this.write(byte);
+  }
 
-  const withLength = appendVarInt(buf, BigInt(encoded.length));
+  /** Write a uint16 value (little-endian). */
+  writeUint16(val: number): void {
+    const bytes = new Uint8Array(2);
 
-  return concat(withLength, encoded);
-}
+    bytes[0] = val & 0xff;
+    bytes[1] = (val >> 8) & 0xff;
+    this.write(bytes);
+  }
 
-/**
- * Append raw bytes to the buffer.
- */
-export function appendFixedBytes(buf: Uint8Array, data: Uint8Array): Uint8Array {
-  return concat(buf, data);
-}
+  /** Write a uint32 value (little-endian). */
+  writeUint32(val: number): void {
+    const bytes = new Uint8Array(4);
 
-/**
- * Read a uint8 value (little-endian) from the buffer.
- * Returns the value and the remaining bytes.
- */
-export function readUint8(buf: Uint8Array): [number, Uint8Array] {
-  const val = buf[0];
+    bytes[0] = val & 0xff;
+    bytes[1] = (val >> 8) & 0xff;
+    bytes[2] = (val >> 16) & 0xff;
+    bytes[3] = (val >> 24) & 0xff;
+    this.write(bytes);
+  }
 
-  return [val, buf.slice(1)];
-}
+  /**
+   * Write a variable-length integer.
+   *
+   * Uses a 7-bit continuation scheme: values 0–0x7f fit in one byte;
+   * larger values use multiple bytes with the high bit set on all but the last byte.
+   */
+  writeVarInt(val: number | bigint): void {
+    let v = BigInt(val);
+    const parts: number[] = [];
 
-/**
- * Read a uint16 value (little-endian) from the buffer.
- * Returns the value and the remaining bytes.
- */
-export function readUint16(buf: Uint8Array): [number, Uint8Array] {
-  const val = buf[0] | (buf[1] << 8);
-
-  return [val, buf.slice(2)];
-}
-
-/**
- * Read a uint32 value (little-endian) from the buffer.
- * Returns the value and the remaining bytes.
- */
-export function readUint32(buf: Uint8Array): [number, Uint8Array] {
-  const val = (buf[0] | (buf[1] << 8) | (buf[2] << 16) | (buf[3] << 24)) >>> 0;
-
-  return [val, buf.slice(4)];
-}
-
-/**
- * Read a variable-length integer from the buffer.
- * Returns the value as a bigint and the remaining bytes.
- *
- * @throws Error if the buffer ends unexpectedly while reading the varint.
- */
-export function readVarInt(buf: Uint8Array): [bigint, Uint8Array] {
-  let result = 0n;
-  let shift = 0n;
-
-  for (let i = 0; i < buf.length; i++) {
-    const byte = buf[i];
-
-    result |= BigInt(byte & 0x7f) << shift;
-    shift += 7n;
-
-    if ((byte & 0x80) === 0) {
-      return [result, buf.slice(i + 1)];
+    while (v >= 0x80n) {
+      parts.push(Number((v & 0x7fn) | 0x80n));
+      v >>= 7n;
     }
+
+    parts.push(Number(v));
+
+    this.write(new Uint8Array(parts));
   }
 
-  throw new Error('unexpected end of data while reading varint');
+  /** Write a string (varint length prefix + UTF-8 bytes). */
+  writeStr(val: string): void {
+    const encoded = new TextEncoder().encode(val);
+
+    this.writeVarInt(BigInt(encoded.length));
+    this.write(encoded);
+  }
+
+  /** Write raw bytes. */
+  writeFixedBytes(data: Uint8Array): void {
+    this.write(data);
+  }
+
+  /** Return the accumulated bytes as a single Uint8Array. */
+  toBytes(): Uint8Array {
+    const result = new Uint8Array(this._len);
+    let offset = 0;
+
+    for (const chunk of this.chunks) {
+      result.set(chunk, offset);
+      offset += chunk.length;
+    }
+
+    return result;
+  }
 }
 
 /**
- * Read a fixed number of bytes from the buffer.
- * Returns the read bytes and the remaining bytes.
+ * Reader reads bytes from a Uint8Array with an internal cursor.
  *
- * @throws Error if the buffer has fewer bytes than requested.
+ * Equivalent to Python's io.BufferedReader pattern: each read advances
+ * the cursor, so there's no need to pass "remaining buffer" tuples around.
  */
-export function readFixedBytes(buf: Uint8Array, size: number): [Uint8Array, Uint8Array] {
-  if (size > buf.length) {
-    throw new Error('unexpected end of data while reading fixed bytes');
+export class Reader {
+  private buf: Uint8Array;
+  private offset = 0;
+
+  constructor(buf: Uint8Array) {
+    this.buf = buf;
   }
 
-  return [buf.slice(0, size), buf.slice(size)];
-}
+  /** Whether all bytes have been consumed. */
+  isEmpty(): boolean {
+    return this.offset >= this.buf.length;
+  }
 
-/**
- * Read a variable-length string (varint length prefix + UTF-8 bytes) from the buffer.
- * Returns the string and the remaining bytes.
- */
-export function readStr(buf: Uint8Array): [string, Uint8Array] {
-  const [length, remaining] = readVarInt(buf);
-  const [raw, rest] = readFixedBytes(remaining, Number(length));
+  /** Read exactly `size` bytes from the stream. */
+  private read(size: number): Uint8Array {
+    if (this.offset + size > this.buf.length) {
+      throw new Error('unexpected end of data while reading');
+    }
 
-  return [new TextDecoder().decode(raw), rest];
+    const data = this.buf.slice(this.offset, this.offset + size);
+
+    this.offset += size;
+
+    return data;
+  }
+
+  /** Read a uint8 value (little-endian). */
+  readUint8(): number {
+    return this.read(1)[0];
+  }
+
+  /** Read a uint16 value (little-endian). */
+  readUint16(): number {
+    const bytes = this.read(2);
+
+    return bytes[0] | (bytes[1] << 8);
+  }
+
+  /** Read a uint32 value (little-endian). */
+  readUint32(): number {
+    const bytes = this.read(4);
+
+    return (bytes[0] | (bytes[1] << 8) | (bytes[2] << 16) | (bytes[3] << 24)) >>> 0;
+  }
+
+  /** Read a variable-length integer. */
+  readVarInt(): bigint {
+    let result = 0n;
+    let shift = 0n;
+
+    while (true) {
+      const byte = this.readUint8();
+
+      result |= BigInt(byte & 0x7f) << shift;
+
+      if ((byte & 0x80) === 0) {
+        break;
+      }
+
+      shift += 7n;
+    }
+
+    return result;
+  }
+
+  /** Read a fixed number of bytes. */
+  readFixedBytes(size: number): Uint8Array {
+    return this.read(size);
+  }
+
+  /** Read a string (varint length prefix + UTF-8 bytes). */
+  readStr(): string {
+    const length = this.readVarInt();
+    const raw = this.readFixedBytes(Number(length));
+
+    return new TextDecoder().decode(raw);
+  }
 }

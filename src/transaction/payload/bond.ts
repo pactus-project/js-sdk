@@ -1,6 +1,6 @@
 import { Address } from '../../crypto/address';
 import { Amount } from '../../types/amount';
-import { appendVarInt, appendFixedBytes, readVarInt, readFixedBytes } from '../../encoding';
+import type { Writer, Reader } from '../../encoding';
 
 import { PayloadType } from './_payload';
 
@@ -12,18 +12,18 @@ export class BondPayload {
     public readonly stake: Amount
   ) {}
 
-  encode(buf: Uint8Array): Uint8Array {
-    buf = this.sender.encode(buf);
-    buf = this.receiver.encode(buf);
+  encode(writer: Writer): void {
+    this.sender.encode(writer);
+    this.receiver.encode(writer);
 
     if (this.publicKey === null) {
-      buf = appendVarInt(buf, 0);
+      writer.writeVarInt(0);
     } else {
-      buf = appendVarInt(buf, 96);
-      buf = appendFixedBytes(buf, this.publicKey);
+      writer.writeVarInt(96);
+      writer.writeFixedBytes(this.publicKey);
     }
 
-    return this.stake.encode(buf);
+    this.stake.encode(writer);
   }
 
   getType(): PayloadType {
@@ -34,24 +34,20 @@ export class BondPayload {
     return this.sender;
   }
 
-  static decode(buf: Uint8Array): [BondPayload, Uint8Array] {
-    const [sender, remaining1] = Address.decode(buf);
-    const [receiver, remaining2] = Address.decode(remaining1);
-    const [pubKeySize, remaining3] = readVarInt(remaining2);
+  static decode(reader: Reader): BondPayload {
+    const sender = Address.decode(reader);
+    const receiver = Address.decode(reader);
+    const pubKeySize = reader.readVarInt();
     let publicKey: Uint8Array | null = null;
-    let remaining4 = remaining3;
 
     if (pubKeySize === 96n) {
-      const [pk, rest] = readFixedBytes(remaining3, 96);
-
-      publicKey = pk;
-      remaining4 = rest;
+      publicKey = reader.readFixedBytes(96);
     } else if (pubKeySize !== 0n) {
       throw new Error(`invalid public key size: ${pubKeySize}`);
     }
 
-    const [stake, remaining5] = Amount.decode(remaining4);
+    const stake = Amount.decode(reader);
 
-    return [new BondPayload(sender, receiver, publicKey, stake), remaining5];
+    return new BondPayload(sender, receiver, publicKey, stake);
   }
 }

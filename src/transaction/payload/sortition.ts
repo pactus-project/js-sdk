@@ -1,5 +1,5 @@
 import { Address } from '../../crypto/address';
-import { appendFixedBytes, readFixedBytes } from '../../encoding';
+import type { Writer, Reader } from '../../encoding';
 
 import { PayloadType } from './_payload';
 
@@ -9,10 +9,9 @@ export class SortitionPayload {
     public readonly proof: Uint8Array
   ) {}
 
-  encode(buf: Uint8Array): Uint8Array {
-    buf = this.address.encode(buf);
-
-    return appendFixedBytes(buf, this.proof);
+  encode(writer: Writer): void {
+    this.address.encode(writer);
+    writer.writeFixedBytes(this.proof);
   }
 
   getType(): PayloadType {
@@ -23,10 +22,10 @@ export class SortitionPayload {
     return this.address;
   }
 
-  static decode(buf: Uint8Array): [SortitionPayload, Uint8Array] {
-    const [address, remaining1] = Address.decode(buf);
-    const [proof, remaining2] = readFixedBytes(remaining1, 48);
+  static decode(reader: Reader): SortitionPayload {
+    const address = Address.decode(reader);
+    const proof = reader.readFixedBytes(48);
 
-    return [new SortitionPayload(address, proof), remaining2];
+    return new SortitionPayload(address, proof);
   }
 }
