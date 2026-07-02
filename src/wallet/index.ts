@@ -10,7 +10,7 @@ import { WalletManager } from './manager';
 import type { IStorage } from './storage/storage';
 
 export * from './types/wallet_info';
-export * from '.';
+export * from './wallet';
 export * from './storage/storage';
 export * from './manager';
 export * from './error';
