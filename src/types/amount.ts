@@ -1,3 +1,5 @@
+import { appendVarInt, readVarInt } from '../encoding';
+
 /**
  * Amount class for handling PAC and NanoPAC conversions
  * Based on the Python SDK implementation but maintaining TypeScript's string-based storage
@@ -186,5 +188,16 @@ export class Amount {
    */
   static zero(): Amount {
     return new Amount('0');
+  }
+
+  /** Encode the amount as a varint and append to the buffer. */
+  encode(buf: Uint8Array): Uint8Array {
+    return appendVarInt(buf, BigInt(this.value));
+  }
+
+  /** Decode an Amount from bytes. Returns [Amount, remaining_buf]. */
+  static decode(buf: Uint8Array): [Amount, Uint8Array] {
+    const [val, remaining] = readVarInt(buf);
+    return [new Amount(val.toString()), remaining];
   }
 }
