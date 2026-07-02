@@ -1,5 +1,6 @@
 import { AddressType } from '../../crypto/address';
 import type { Address } from '../../crypto/address';
+import type { Writer } from '../../encoding';
 
 export enum PayloadType {
   TRANSFER = 1,
@@ -10,7 +11,7 @@ export enum PayloadType {
 }
 
 export interface Payload {
-  encode(buf: Uint8Array): Uint8Array;
+  encode(writer: Writer): void;
   getType(): PayloadType;
   signer(): Address;
 }

@@ -2,6 +2,7 @@ import { Transaction } from './transaction';
 import { Address } from '../crypto/address';
 import { Amount } from '../types/amount';
 import { Height } from '../types/height';
+import { Reader } from '../encoding';
 import type { TransferPayload, BondPayload } from './payload';
 import { PayloadType } from './payload';
 
@@ -25,9 +26,8 @@ describe('Transaction', () => {
         '8084af5f';
 
       const raw = hexToBytes(signedDataHex);
-      const [tx, remaining] = Transaction.decode(raw);
+      const tx = Transaction.decode(new Reader(raw));
 
-      expect(remaining.length).toBe(0);
       expect(tx.version).toBe(1);
       expect(tx.lockTime.value).toBe(2335524);
       expect(tx.fee.toString()).toBe('10000000');
@@ -79,9 +79,8 @@ describe('Transaction', () => {
         '8094ebdc03';
 
       const raw = hexToBytes(signedDataHex);
-      const [tx, remaining] = Transaction.decode(raw);
+      const tx = Transaction.decode(new Reader(raw));
 
-      expect(remaining.length).toBe(0);
       expect(tx.version).toBe(1);
       expect(tx.lockTime.value).toBe(2335580);
       expect(tx.fee.toString()).toBe('10000000');

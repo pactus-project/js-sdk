@@ -3,7 +3,8 @@ import { blake2b } from 'blakejs';
 import type { Address } from '../crypto/address';
 import { Amount } from '../types/amount';
 import { Height } from '../types/height';
-import { appendUint8, appendStr, readUint8, readStr, readFixedBytes } from '../encoding';
+import type { Reader } from '../encoding';
+import { Writer } from '../encoding';
 
 import {
   PayloadType,
@@ -90,59 +91,33 @@ export class Transaction {
     this.signature = null;
   }
 
-  /** Decode a Transaction from bytes. Returns [Transaction, remaining_buf]. */
-  static decode(buf: Uint8Array): [Transaction, Uint8Array] {
-    const [flags, remaining1] = readUint8(buf);
-    const [version, remaining2] = readUint8(remaining1);
-    const [lockTime, remaining3] = Height.decode(remaining2);
-    const [fee, remaining4] = Amount.decode(remaining3);
-    const [memo, remaining5] = readStr(remaining4);
-    const [payloadType, remaining6] = readUint8(remaining5);
+  /** Decode a Transaction from the reader. */
+  static decode(reader: Reader): Transaction {
+    const flags = reader.readUint8();
+    const version = reader.readUint8();
+    const lockTime = Height.decode(reader);
+    const fee = Amount.decode(reader);
+    const memo = reader.readStr();
+    const payloadType = reader.readUint8();
 
     let payload: Payload;
-    let remaining7: Uint8Array;
 
     switch (payloadType) {
-      case PayloadType.TRANSFER: {
-        const [p, r] = TransferPayload.decode(remaining6);
-
-        payload = p;
-        remaining7 = r;
+      case PayloadType.TRANSFER:
+        payload = TransferPayload.decode(reader);
         break;
-      }
-
-      case PayloadType.BOND: {
-        const [p, r] = BondPayload.decode(remaining6);
-
-        payload = p;
-        remaining7 = r;
+      case PayloadType.BOND:
+        payload = BondPayload.decode(reader);
         break;
-      }
-
-      case PayloadType.SORTITION: {
-        const [p, r] = SortitionPayload.decode(remaining6);
-
-        payload = p;
-        remaining7 = r;
+      case PayloadType.SORTITION:
+        payload = SortitionPayload.decode(reader);
         break;
-      }
-
-      case PayloadType.UNBOND: {
-        const [p, r] = UnbondPayload.decode(remaining6);
-
-        payload = p;
-        remaining7 = r;
+      case PayloadType.UNBOND:
+        payload = UnbondPayload.decode(reader);
         break;
-      }
-
-      case PayloadType.WITHDRAW: {
-        const [p, r] = WithdrawPayload.decode(remaining6);
-
-        payload = p;
-        remaining7 = r;
+      case PayloadType.WITHDRAW:
+        payload = WithdrawPayload.decode(reader);
         break;
-      }
-
       default:
         throw new Error(`unknown payload type: ${payloadType}`);
     }
@@ -155,25 +130,21 @@ export class Transaction {
     tx.signature = null;
 
     if (flags & FLAG_NOT_SIGNED) {
-      return [tx, remaining7];
+      return tx;
     }
 
     const signerType = payload.signer().addressType();
     const sigSize = getSignatureSize(signerType);
-    const [sig, remaining8] = readFixedBytes(remaining7, sigSize);
 
-    tx.signature = sig;
+    tx.signature = reader.readFixedBytes(sigSize);
 
     if ((flags & FLAG_STRIPPED_PUBLIC_KEY) === 0) {
       const pubSize = getPublicKeySize(signerType);
-      const [pub, remaining9] = readFixedBytes(remaining8, pubSize);
 
-      tx.publicKey = pub;
-
-      return [tx, remaining9];
+      tx.publicKey = reader.readFixedBytes(pubSize);
     }
 
-    return [tx, remaining8];
+    return tx;
   }
 
   /** Create a transfer transaction. */
@@ -226,23 +197,24 @@ export class Transaction {
     return new Transaction(lockTime, fee, memo, payload);
   }
 
-  /** Generate the unsigned bytes of the transaction (includes flags). */
-  private getUnsignedBytes(buf: Uint8Array): Uint8Array {
-    buf = appendUint8(buf, this.flags);
-    buf = appendUint8(buf, this.version);
-    buf = this.lockTime.encode(buf);
-    buf = this.fee.encode(buf);
-    buf = appendStr(buf, this.memo);
-    buf = appendUint8(buf, this.payload.getType());
-
-    return this.payload.encode(buf);
+  /** Write the unsigned bytes of the transaction to the writer. */
+  private writeUnsignedBytes(writer: Writer): void {
+    writer.writeUint8(this.flags);
+    writer.writeUint8(this.version);
+    this.lockTime.encode(writer);
+    this.fee.encode(writer);
+    writer.writeStr(this.memo);
+    writer.writeUint8(this.payload.getType());
+    this.payload.encode(writer);
   }
 
   /** Return the bytes to be signed (everything except flags). */
   signBytes(): Uint8Array {
-    const buf = this.getUnsignedBytes(new Uint8Array(0));
+    const w = new Writer();
 
-    return buf.slice(1);
+    this.writeUnsignedBytes(w);
+
+    return w.toBytes().slice(1);
   }
 
   /** Return the transaction ID (blake2b-256 of sign bytes). */

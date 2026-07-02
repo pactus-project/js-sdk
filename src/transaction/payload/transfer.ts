@@ -1,5 +1,6 @@
 import { Address } from '../../crypto/address';
 import { Amount } from '../../types/amount';
+import type { Writer, Reader } from '../../encoding';
 
 import { PayloadType } from './_payload';
 
@@ -10,11 +11,10 @@ export class TransferPayload {
     public readonly amount: Amount
   ) {}
 
-  encode(buf: Uint8Array): Uint8Array {
-    buf = this.sender.encode(buf);
-    buf = this.receiver.encode(buf);
-
-    return this.amount.encode(buf);
+  encode(writer: Writer): void {
+    this.sender.encode(writer);
+    this.receiver.encode(writer);
+    this.amount.encode(writer);
   }
 
   getType(): PayloadType {
@@ -25,11 +25,11 @@ export class TransferPayload {
     return this.sender;
   }
 
-  static decode(buf: Uint8Array): [TransferPayload, Uint8Array] {
-    const [sender, remaining1] = Address.decode(buf);
-    const [receiver, remaining2] = Address.decode(remaining1);
-    const [amount, remaining3] = Amount.decode(remaining2);
+  static decode(reader: Reader): TransferPayload {
+    const sender = Address.decode(reader);
+    const receiver = Address.decode(reader);
+    const amount = Amount.decode(reader);
 
-    return [new TransferPayload(sender, receiver, amount), remaining3];
+    return new TransferPayload(sender, receiver, amount);
   }
 }

@@ -1,4 +1,4 @@
-import { appendVarInt, readVarInt } from '../encoding';
+import type { Writer, Reader } from '../encoding';
 
 /**
  * Amount class for handling PAC and NanoPAC conversions
@@ -190,15 +190,15 @@ export class Amount {
     return new Amount('0');
   }
 
-  /** Encode the amount as a varint and append to the buffer. */
-  encode(buf: Uint8Array): Uint8Array {
-    return appendVarInt(buf, BigInt(this.value));
+  /** Encode the amount as a varint to the writer. */
+  encode(writer: Writer): void {
+    writer.writeVarInt(BigInt(this.value));
   }
 
-  /** Decode an Amount from bytes. Returns [Amount, remaining_buf]. */
-  static decode(buf: Uint8Array): [Amount, Uint8Array] {
-    const [val, remaining] = readVarInt(buf);
+  /** Decode an Amount from the reader. */
+  static decode(reader: Reader): Amount {
+    const val = reader.readVarInt();
 
-    return [new Amount(val.toString()), remaining];
+    return new Amount(val.toString());
   }
 }
