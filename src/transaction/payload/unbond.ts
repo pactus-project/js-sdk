@@ -19,6 +19,7 @@ export class UnbondPayload {
 
   static decode(buf: Uint8Array): [UnbondPayload, Uint8Array] {
     const [validator, remaining] = Address.decode(buf);
+
     return [new UnbondPayload(validator), remaining];
   }
 }

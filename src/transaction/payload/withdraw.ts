@@ -13,6 +13,7 @@ export class WithdrawPayload {
   encode(buf: Uint8Array): Uint8Array {
     buf = this.fromAddr.encode(buf);
     buf = this.toAddr.encode(buf);
+
     return this.amount.encode(buf);
   }
 
@@ -28,6 +29,7 @@ export class WithdrawPayload {
     const [fromAddr, remaining1] = Address.decode(buf);
     const [toAddr, remaining2] = Address.decode(remaining1);
     const [amount, remaining3] = Amount.decode(remaining2);
+
     return [new WithdrawPayload(fromAddr, toAddr, amount), remaining3];
   }
 }

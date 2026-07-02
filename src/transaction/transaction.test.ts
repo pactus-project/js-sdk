@@ -2,7 +2,8 @@ import { Transaction } from './transaction';
 import { Address } from '../crypto/address';
 import { Amount } from '../types/amount';
 import { Height } from '../types/height';
-import { PayloadType, TransferPayload, BondPayload } from './payload';
+import type { TransferPayload, BondPayload } from './payload';
+import { PayloadType } from './payload';
 
 describe('Transaction', () => {
   describe('decode transfer transaction', () => {
@@ -43,9 +44,11 @@ describe('Transaction', () => {
       expect(tx.publicKey).not.toBeNull();
 
       // Signature is 64 bytes (ED25519_ACCOUNT)
-      expect(tx.signature!.length).toBe(64);
+      const sig = tx.signature as Uint8Array;
+      expect(sig.length).toBe(64);
       // Public key is 32 bytes (ED25519_ACCOUNT)
-      expect(tx.publicKey!.length).toBe(32);
+      const pub = tx.publicKey as Uint8Array;
+      expect(pub.length).toBe(32);
 
       // Transaction ID
       expect(bytesToHex(tx.id())).toBe(expectedTxId);
@@ -96,9 +99,11 @@ describe('Transaction', () => {
       expect(tx.publicKey).not.toBeNull();
 
       // Signature is 64 bytes (ED25519_ACCOUNT)
-      expect(tx.signature!.length).toBe(64);
+      const sig = tx.signature as Uint8Array;
+      expect(sig.length).toBe(64);
       // Public key is 32 bytes (ED25519_ACCOUNT)
-      expect(tx.publicKey!.length).toBe(32);
+      const pub = tx.publicKey as Uint8Array;
+      expect(pub.length).toBe(32);
 
       // Transaction ID
       expect(bytesToHex(tx.id())).toBe(expectedTxId);

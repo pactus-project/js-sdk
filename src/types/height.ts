@@ -21,6 +21,7 @@ export class Height {
   /** Decode a Height from bytes. Returns [Height, remaining_buf]. */
   static decode(buf: Uint8Array): [Height, Uint8Array] {
     const [val, remaining] = readUint32(buf);
+
     return [new Height(val), remaining];
   }
 }

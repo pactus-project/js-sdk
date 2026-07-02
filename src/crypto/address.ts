@@ -1,8 +1,10 @@
 import { bech32m } from 'bech32';
+
 import { appendUint8, readUint8, appendFixedBytes, readFixedBytes } from '../encoding';
 
 const ADDRESS_SIZE = 21;
 const TREASURY_ADDRESS_STRING = '000000000000000000000000000000000000000000';
+
 export const ADDRESS_HRP = 'pc';
 
 export enum AddressType {
@@ -25,6 +27,7 @@ export class Address {
     if (data.length !== ADDRESS_SIZE - 1) {
       throw new Error('Data must be 20 bytes long');
     }
+
     this._data = new Uint8Array(ADDRESS_SIZE);
     this._data[0] = addressType;
     this._data.set(data, 1);
@@ -37,6 +40,7 @@ export class Address {
     }
 
     const decoded = bech32m.decode(text);
+
     if (decoded.prefix !== ADDRESS_HRP) {
       throw new Error(`Invalid HRP: ${decoded.prefix}`);
     }
@@ -76,6 +80,7 @@ export class Address {
     const data = this._data.slice(1);
     const converted = bech32m.toWords(data);
     const words = [type, ...converted];
+
     return bech32m.encode(ADDRESS_HRP, words);
   }
 
@@ -92,6 +97,7 @@ export class Address {
   /** Check if this is an account address. */
   isAccountAddress(): boolean {
     const t = this.addressType();
+
     return (
       t === AddressType.TREASURY ||
       t === AddressType.BLS_ACCOUNT ||
@@ -109,16 +115,20 @@ export class Address {
     if (this.isTreasuryAddress()) {
       return appendUint8(buf, AddressType.TREASURY);
     }
+
     return appendFixedBytes(buf, this.rawBytes());
   }
 
   /** Decode an Address from bytes. Returns [Address, remaining_buf]. */
   static decode(buf: Uint8Array): [Address, Uint8Array] {
     const [addrType, remaining] = readUint8(buf);
+
     if (addrType === AddressType.TREASURY) {
       return [new Address(AddressType.TREASURY, new Uint8Array(20)), remaining];
     }
+
     const [data, rest] = readFixedBytes(remaining, 20);
+
     return [new Address(addrType as AddressType, data), rest];
   }
 }

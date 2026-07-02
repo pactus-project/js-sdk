@@ -13,6 +13,7 @@ export class TransferPayload {
   encode(buf: Uint8Array): Uint8Array {
     buf = this.sender.encode(buf);
     buf = this.receiver.encode(buf);
+
     return this.amount.encode(buf);
   }
 
@@ -28,6 +29,7 @@ export class TransferPayload {
     const [sender, remaining1] = Address.decode(buf);
     const [receiver, remaining2] = Address.decode(remaining1);
     const [amount, remaining3] = Amount.decode(remaining2);
+
     return [new TransferPayload(sender, receiver, amount), remaining3];
   }
 }

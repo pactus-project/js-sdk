@@ -15,12 +15,14 @@ export class BondPayload {
   encode(buf: Uint8Array): Uint8Array {
     buf = this.sender.encode(buf);
     buf = this.receiver.encode(buf);
-    if (this.publicKey !== null) {
+
+    if (this.publicKey === null) {
+      buf = appendVarInt(buf, 0);
+    } else {
       buf = appendVarInt(buf, 96);
       buf = appendFixedBytes(buf, this.publicKey);
-    } else {
-      buf = appendVarInt(buf, 0);
     }
+
     return this.stake.encode(buf);
   }
 
@@ -38,14 +40,18 @@ export class BondPayload {
     const [pubKeySize, remaining3] = readVarInt(remaining2);
     let publicKey: Uint8Array | null = null;
     let remaining4 = remaining3;
+
     if (pubKeySize === 96n) {
       const [pk, rest] = readFixedBytes(remaining3, 96);
+
       publicKey = pk;
       remaining4 = rest;
     } else if (pubKeySize !== 0n) {
       throw new Error(`invalid public key size: ${pubKeySize}`);
     }
+
     const [stake, remaining5] = Amount.decode(remaining4);
+
     return [new BondPayload(sender, receiver, publicKey, stake), remaining5];
   }
 }

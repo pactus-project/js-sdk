@@ -198,6 +198,7 @@ export class Amount {
   /** Decode an Amount from bytes. Returns [Amount, remaining_buf]. */
   static decode(buf: Uint8Array): [Amount, Uint8Array] {
     const [val, remaining] = readVarInt(buf);
+
     return [new Amount(val.toString()), remaining];
   }
 }

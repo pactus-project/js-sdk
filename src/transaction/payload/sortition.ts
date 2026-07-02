@@ -11,6 +11,7 @@ export class SortitionPayload {
 
   encode(buf: Uint8Array): Uint8Array {
     buf = this.address.encode(buf);
+
     return appendFixedBytes(buf, this.proof);
   }
 
@@ -25,6 +26,7 @@ export class SortitionPayload {
   static decode(buf: Uint8Array): [SortitionPayload, Uint8Array] {
     const [address, remaining1] = Address.decode(buf);
     const [proof, remaining2] = readFixedBytes(remaining1, 48);
+
     return [new SortitionPayload(address, proof), remaining2];
   }
 }
