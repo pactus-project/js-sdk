@@ -5,3 +5,4 @@
 
 export * from './wallet';
 export * from './transaction/transaction';
+export * from './encoding';
