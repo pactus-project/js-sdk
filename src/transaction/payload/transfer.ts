@@ -7,7 +7,7 @@ export class TransferPayload {
   constructor(
     public readonly sender: Address,
     public readonly receiver: Address,
-    public readonly amount: Amount,
+    public readonly amount: Amount
   ) {}
 
   encode(buf: Uint8Array): Uint8Array {

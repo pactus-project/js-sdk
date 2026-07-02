@@ -9,7 +9,7 @@ export class BondPayload {
     public readonly sender: Address,
     public readonly receiver: Address,
     public readonly publicKey: Uint8Array | null,
-    public readonly stake: Amount,
+    public readonly stake: Amount
   ) {}
 
   encode(buf: Uint8Array): Uint8Array {

@@ -6,7 +6,7 @@ import { PayloadType } from './_payload';
 export class SortitionPayload {
   constructor(
     public readonly address: Address,
-    public readonly proof: Uint8Array,
+    public readonly proof: Uint8Array
   ) {}
 
   encode(buf: Uint8Array): Uint8Array {

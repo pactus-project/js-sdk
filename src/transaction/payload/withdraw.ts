@@ -7,7 +7,7 @@ export class WithdrawPayload {
   constructor(
     public readonly fromAddr: Address,
     public readonly toAddr: Address,
-    public readonly amount: Amount,
+    public readonly amount: Amount
   ) {}
 
   encode(buf: Uint8Array): Uint8Array {

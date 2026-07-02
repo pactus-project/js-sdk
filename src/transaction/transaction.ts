@@ -3,13 +3,7 @@ import { blake2b } from 'blakejs';
 import type { Address } from '../crypto/address';
 import { Amount } from '../types/amount';
 import { Height } from '../types/height';
-import {
-  appendUint8,
-  appendStr,
-  readUint8,
-  readStr,
-  readFixedBytes,
-} from '../encoding';
+import { appendUint8, appendStr, readUint8, readStr, readFixedBytes } from '../encoding';
 
 import {
   PayloadType,
@@ -189,7 +183,7 @@ export class Transaction {
     receiver: Address,
     amount: Amount,
     fee: Amount,
-    memo: string = '',
+    memo: string = ''
   ): Transaction {
     const payload = new TransferPayload(sender, receiver, amount);
 
@@ -204,7 +198,7 @@ export class Transaction {
     publicKey: Uint8Array | null,
     fee: Amount,
     stake: Amount,
-    memo: string = '',
+    memo: string = ''
   ): Transaction {
     const payload = new BondPayload(sender, receiver, publicKey, stake);
 
@@ -212,11 +206,7 @@ export class Transaction {
   }
 
   /** Create an unbond transaction. */
-  static createUnbondTx(
-    lockTime: Height,
-    validator: Address,
-    memo: string = '',
-  ): Transaction {
+  static createUnbondTx(lockTime: Height, validator: Address, memo: string = ''): Transaction {
     const payload = new UnbondPayload(validator);
 
     return new Transaction(lockTime, Amount.zero(), memo, payload);
@@ -229,7 +219,7 @@ export class Transaction {
     toAddr: Address,
     amount: Amount,
     fee: Amount,
-    memo: string = '',
+    memo: string = ''
   ): Transaction {
     const payload = new WithdrawPayload(fromAddr, toAddr, amount);
 
