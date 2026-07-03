@@ -42,6 +42,8 @@
     "type-check": "tsc --noEmit"
   },
   "dependencies": {
+    "@noble/curves": "^1.9.7",
+    "@noble/hashes": "^1.8.0",
     "@trustwallet/wallet-core": "^4.6.15",
     "argon2-browser": "^1.18.0",
     "bech32": "^2.0.0",
