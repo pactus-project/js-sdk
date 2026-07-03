@@ -51,9 +51,7 @@ describe('Address', () => {
     it('should handle treasury address', () => {
       const addr = Address.fromString('000000000000000000000000000000000000000000');
 
-      expect(bytesToHex(addr.rawBytes())).toBe(
-        '000000000000000000000000000000000000000000'
-      );
+      expect(bytesToHex(addr.rawBytes())).toBe('000000000000000000000000000000000000000000');
       expect(addr.isTreasuryAddress()).toBe(true);
 
       const w = new Writer();
@@ -63,10 +61,7 @@ describe('Address', () => {
   });
 
   describe('invalid', () => {
-    const invalidCases = [
-      'pc1p0hrct7eflrpw4ccrttxzs4qud2axex4dg8xaf5',
-      '',
-    ];
+    const invalidCases = ['pc1p0hrct7eflrpw4ccrttxzs4qud2axex4dg8xaf5', ''];
 
     for (const input of invalidCases) {
       it(`should reject "${input || '<empty>'}"`, () => {
@@ -78,6 +73,6 @@ describe('Address', () => {
 
 function bytesToHex(bytes: Uint8Array): string {
   return Array.from(bytes)
-    .map((b) => b.toString(16).padStart(2, '0'))
+    .map(b => b.toString(16).padStart(2, '0'))
     .join('');
 }
