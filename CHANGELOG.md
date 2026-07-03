@@ -1,3 +1,5 @@
+## [0.9.3](https://github.com/pactus-project/js-sdk/compare/v0.9.3...v0.9.3) (2026-07-03)
+
 ## [0.9.2](https://github.com/pactus-project/js-sdk/compare/v0.9.1...v0.9.2) (2026-07-03)
 
 ### Feat
