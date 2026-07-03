@@ -1,6 +1,12 @@
 import { blake2b } from 'blakejs';
 
 import type { Address } from '../crypto/address';
+import { AddressType } from '../crypto/address';
+import type { IPublicKey, ISignature, IPrivateKey } from '../crypto/interfaces';
+import { PublicKey as Ed25519PublicKey } from '../crypto/ed25519/public_key';
+import { Signature as Ed25519Signature } from '../crypto/ed25519/signature';
+import { PublicKey as BlsPublicKey } from '../crypto/bls/public_key';
+import { Signature as BlsSignature } from '../crypto/bls/signature';
 import { Amount } from '../types/amount';
 import { Height } from '../types/height';
 import type { Reader } from '../encoding';
@@ -78,8 +84,8 @@ export class Transaction {
   public fee: Amount;
   public memo: string;
   public payload: Payload;
-  public publicKey: Uint8Array | null;
-  public signature: Uint8Array | null;
+  public publicKey: IPublicKey | null;
+  public signature: ISignature | null;
 
   constructor(lockTime: Height, fee: Amount, memo: string, payload: Payload) {
     this.lockTime = lockTime;
@@ -136,13 +142,14 @@ export class Transaction {
 
     const signerType = payload.signer().addressType();
     const sigSize = getSignatureSize(signerType);
+    const sigBytes = r.readFixedBytes(sigSize);
 
-    tx.signature = r.readFixedBytes(sigSize);
+    tx.signature = createSignature(sigBytes, signerType);
 
     if ((flags & FLAG_STRIPPED_PUBLIC_KEY) === 0) {
       const pubSize = getPublicKeySize(signerType);
 
-      tx.publicKey = r.readFixedBytes(pubSize);
+      tx.publicKey = createPublicKey(r.readFixedBytes(pubSize), signerType);
     }
 
     return tx;
@@ -198,7 +205,7 @@ export class Transaction {
     return new Transaction(lockTime, fee, memo, payload);
   }
 
-  /** Write the unsigned bytes of the transaction to the writer. */
+  /** Encode the transaction to the writer (unsigned or signed). */
   encode(w: Writer): void {
     w.writeUint8(this.flags);
     w.writeUint8(this.version);
@@ -207,15 +214,25 @@ export class Transaction {
     w.writeStr(this.memo);
     w.writeUint8(this.payload.getType());
     this.payload.encode(w);
+
+    if (!(this.flags & FLAG_NOT_SIGNED) && this.signature && this.publicKey) {
+      this.signature.encode(w);
+      this.publicKey.encode(w);
+    }
   }
 
-  /** Return the bytes to be signed (everything except flags). */
+  /** Return the bytes to be signed (version through payload, without flags). */
   signBytes(): Uint8Array {
     const w = new Writer();
 
-    this.encode(w);
+    w.writeUint8(this.version);
+    this.lockTime.encode(w);
+    this.fee.encode(w);
+    w.writeStr(this.memo);
+    w.writeUint8(this.payload.getType());
+    this.payload.encode(w);
 
-    return w.toBytes().slice(1);
+    return w.toBytes();
   }
 
   /** Return the transaction ID (blake2b-256 of sign bytes). */
@@ -224,12 +241,63 @@ export class Transaction {
   }
 
   /**
-   * Sign the transaction and return signed bytes.
+   * Sign the transaction with a private key.
    *
-   * NOTE: Signing is not yet supported in the TypeScript SDK.
-   * BLS, Ed25519, and secp256k1 signing are not implemented.
+   * Clears the FLAG_NOT_SIGNED flag, computes the signature over signBytes(),
+   * and stores both signature and the derived public key.
    */
-  sign(): Uint8Array {
-    throw new Error('signing is not supported in the TypeScript SDK');
+  sign(privateKey: IPrivateKey): void {
+    const msg = this.signBytes();
+
+    this.signature = privateKey.sign(msg);
+    this.publicKey = privateKey.publicKey();
+    this.flags &= ~FLAG_NOT_SIGNED;
+  }
+
+  /**
+   * Verify the transaction signature.
+   *
+   * Returns true if the signature is valid against the stored public key and
+   * the transaction's sign bytes. Returns false if publicKey or signature is
+   * missing.
+   */
+  verify(): boolean {
+    if (!this.publicKey || !this.signature) {
+      return false;
+    }
+
+    return this.publicKey.verify(this.signBytes(), this.signature);
+  }
+}
+
+// ---- Factory helpers for typed crypto objects ----
+
+function createPublicKey(bytes: Uint8Array, addressType: AddressType): IPublicKey {
+  // Ensure a plain Uint8Array (not a Buffer subclass) for noble compatibility
+  const raw = new Uint8Array(bytes);
+
+  switch (addressType) {
+    case AddressType.ED25519_ACCOUNT:
+      return new Ed25519PublicKey(raw);
+    case AddressType.BLS_ACCOUNT:
+    case AddressType.VALIDATOR:
+      return new BlsPublicKey(raw);
+    default:
+      throw new Error(`unknown address type for public key: ${addressType}`);
+  }
+}
+
+function createSignature(bytes: Uint8Array, addressType: AddressType): ISignature {
+  // Ensure a plain Uint8Array (not a Buffer subclass) for noble compatibility
+  const raw = new Uint8Array(bytes);
+
+  switch (addressType) {
+    case AddressType.ED25519_ACCOUNT:
+      return new Ed25519Signature(raw);
+    case AddressType.BLS_ACCOUNT:
+    case AddressType.VALIDATOR:
+      return new BlsSignature(raw);
+    default:
+      throw new Error(`unknown address type for signature: ${addressType}`);
   }
 }

@@ -38,3 +38,21 @@ export function hexToBytes(hex: string): Uint8Array {
 
   return bytes;
 }
+
+/**
+ * Decode a bech32m-encoded public key string into raw bytes.
+ *
+ * Validates the HRP against the given value (default "public" for mainnet).
+ */
+export function decodeBech32PublicKey(
+  text: string,
+  expectedHrp: string = 'public'
+): Uint8Array {
+  const { hrp, data } = decodeWithType(text);
+
+  if (hrp !== expectedHrp) {
+    throw new Error(`Invalid public key hrp: ${hrp}, expected: ${expectedHrp}`);
+  }
+
+  return data;
+}

@@ -1,10 +1,13 @@
-import { Transaction } from './transaction';
-import { Address } from '../crypto/address';
+import { Transaction, FLAG_NOT_SIGNED } from './transaction';
+import { Address, AddressType } from '../crypto/address';
 import { Amount } from '../types/amount';
 import { Height } from '../types/height';
-import { Reader } from '../encoding';
+import { Reader, Writer } from '../encoding';
 import type { TransferPayload, BondPayload } from './payload';
 import { PayloadType } from './payload';
+import { PrivateKey as Ed25519PrivateKey } from '../crypto/ed25519/private_key';
+import { PublicKey as Ed25519PublicKey } from '../crypto/ed25519/public_key';
+import { Signature as Ed25519Signature } from '../crypto/ed25519/signature';
 
 describe('Transaction', () => {
   describe('decode transfer transaction', () => {
@@ -44,11 +47,9 @@ describe('Transaction', () => {
       expect(tx.publicKey).not.toBeNull();
 
       // Signature is 64 bytes (ED25519_ACCOUNT)
-      const sig = tx.signature as Uint8Array;
-      expect(sig.length).toBe(64);
+      expect(tx.signature!.rawBytes().length).toBe(64);
       // Public key is 32 bytes (ED25519_ACCOUNT)
-      const pub = tx.publicKey as Uint8Array;
-      expect(pub.length).toBe(32);
+      expect(tx.publicKey!.rawBytes().length).toBe(32);
 
       // Transaction ID
       expect(bytesToHex(tx.id())).toBe(expectedTxId);
@@ -98,11 +99,9 @@ describe('Transaction', () => {
       expect(tx.publicKey).not.toBeNull();
 
       // Signature is 64 bytes (ED25519_ACCOUNT)
-      const sig = tx.signature as Uint8Array;
-      expect(sig.length).toBe(64);
+      expect(tx.signature!.rawBytes().length).toBe(64);
       // Public key is 32 bytes (ED25519_ACCOUNT)
-      const pub = tx.publicKey as Uint8Array;
-      expect(pub.length).toBe(32);
+      expect(tx.publicKey!.rawBytes().length).toBe(32);
 
       // Transaction ID
       expect(bytesToHex(tx.id())).toBe(expectedTxId);
@@ -138,17 +137,43 @@ describe('Transaction', () => {
     });
   });
 
-  describe('sign', () => {
-    it('should throw error when sign is called', () => {
+  describe('sign and verify', () => {
+    it('should sign and verify a transaction with round-trip', () => {
+      const privKey = Ed25519PrivateKey.random();
+      const pubKey = privKey.publicKey();
+      const sender = pubKey.accountAddress();
+      const receiver = Address.fromString('pc1r0g22ufzn8qtw0742dmfglnw73e260hep0k3yra');
       const lockTime = new Height(0);
-      const sender = Address.fromString('pc1z5x2a0lkt5nrrdqe0rkcv6r4pfkmdhrr3mawvua');
-      const receiver = Address.fromString('pc1zt6qcdymkk48c5ds0fzfsaf6puwu8w8djn3ffpn');
       const amount = Amount.zero();
       const fee = Amount.zero();
 
       const tx = Transaction.createTransferTx(lockTime, sender, receiver, amount, fee);
 
-      expect(() => tx.sign()).toThrow('signing is not supported in the TypeScript SDK');
+      // Unsigned tx should not have sig/pubKey
+      expect(tx.signature).toBeNull();
+      expect(tx.publicKey).toBeNull();
+
+      // Mark as unsigned and sign
+      tx.flags = FLAG_NOT_SIGNED;
+      tx.sign(privKey);
+
+      expect(tx.signature).not.toBeNull();
+      expect(tx.publicKey).not.toBeNull();
+      expect(tx.verify()).toBe(true);
+
+      // Encode signed tx
+      const w = new Writer();
+
+      tx.encode(w);
+      const signedBytes = w.toBytes();
+
+      // Decode round-trip
+      const decoded = Transaction.decode(new Reader(signedBytes));
+
+      expect(decoded.flags).toBe(0);
+      expect(decoded.signature).not.toBeNull();
+      expect(decoded.publicKey).not.toBeNull();
+      expect(decoded.verify()).toBe(true);
     });
   });
 });

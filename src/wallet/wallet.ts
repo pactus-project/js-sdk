@@ -1,7 +1,6 @@
 import * as crypto from 'crypto';
 
 import * as bip39 from 'bip39';
-import { bech32m } from 'bech32';
 import type { WalletCore } from '@trustwallet/wallet-core';
 import type { HDWallet } from '@trustwallet/wallet-core/dist/src/wallet-core';
 
@@ -14,9 +13,10 @@ import type {
   BondTransaction,
 } from '../transaction';
 import { Transaction, TransactionDetailsType, FLAG_NOT_SIGNED } from '../transaction';
-import { Writer } from '../encoding';
+import { Writer, Reader } from '../encoding';
 
-import { bytesToHex } from '../crypto/utils';
+import { bytesToHex, decodeBech32PublicKey } from '../crypto/utils';
+import { PrivateKey as Ed25519PrivateKey } from '../crypto/ed25519/private_key';
 
 import { Encrypter } from './encrypter/encrypter';
 import { MnemonicError, StorageError, NetworkError } from './error';
@@ -664,6 +664,17 @@ export class Wallet {
   }
 
   /**
+   * Encode a Transaction object to raw bytes.
+   */
+  private encodeTx(txn: Transaction): Uint8Array {
+    const w = new Writer();
+
+    txn.encode(w);
+
+    return w.toBytes();
+  }
+
+  /**
    * Get raw transfer transaction hex — built locally, no RPC.
    */
   private getRawTransferTransaction(
@@ -739,7 +750,10 @@ export class Wallet {
   }
 
   /**
-   * Sign the raw transaction
+   * Sign a raw (unsigned) transaction using the wallet's private key.
+   *
+   * Decodes the hex bytes into a Transaction, signs it via
+   * Transaction.sign(), and returns the fully-encoded signed hex.
    */
   async signTransaction(
     rawTxHex: string,
@@ -752,37 +766,35 @@ export class Wallet {
       throw new Error('Empty transaction buffer');
     }
 
-    const hdWallet = await this.hdWallet(password);
-    const derivationPath = addressPath;
-    const privateKey = hdWallet.getKey(this.core.CoinType.pactus, derivationPath);
+    // Decode the raw unsigned transaction
+    const reader = new Reader(rawTxBytes);
+    const txn = Transaction.decode(reader);
 
-    // First byte of rawTxBytes should be the flags byte (0x00 for unsigned, 0x02 for signed)
-    // Make sure we're working with an unsigned transaction
-    if (rawTxBytes[0] !== 0x02) {
-      console.warn('Warning: Raw transaction does not have the expected flag byte');
+    if (!(txn.flags & FLAG_NOT_SIGNED)) {
+      console.warn('Warning: Transaction is already signed');
     }
 
-    // Get the bytes to sign (remove the first byte which is the flags)
-    const bytesToSign = rawTxBytes.subarray(1);
+    // Derive the ed25519 private key from the HD wallet
+    const hdWallet = await this.hdWallet(password);
+    const twPrivateKey = hdWallet.getKey(this.core.CoinType.pactus, addressPath);
+    const privKey = new Ed25519PrivateKey(
+      new Uint8Array(twPrivateKey.data())
+    );
 
     // Sign the transaction
-    const signatureBytes = privateKey.sign(Uint8Array.from(bytesToSign), this.core.Curve.ed25519);
+    txn.sign(privKey);
 
-    // Get the public key bytes
-    const publicKeyBytes = privateKey.getPublicKeyEd25519().data();
+    // Verify the signature
+    if (!txn.verify()) {
+      throw new Error('Signature verification failed');
+    }
 
-    // Create a new buffer with flags byte set to 0x00 (signed)
-    const signedTxHeader = Buffer.from([0x00]);
+    // Encode the signed transaction
+    const w = new Writer();
 
-    // Concatenate: [flags=0x00] + original tx without flags + signature + public key
-    const signedTxBytes = Buffer.concat([
-      signedTxHeader,
-      bytesToSign,
-      Buffer.from(signatureBytes),
-      Buffer.from(publicKeyBytes),
-    ]);
+    txn.encode(w);
 
-    return { signedRawTxHex: signedTxBytes.toString('hex') };
+    return { signedRawTxHex: bytesToHex(w.toBytes()) };
   }
 
   /**
