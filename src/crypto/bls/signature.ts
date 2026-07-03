@@ -1,4 +1,5 @@
 import { bls12_381 } from '@noble/curves/bls12-381';
+
 import type { Writer, Reader } from '../../encoding';
 import { hexToBytes, bytesToHex } from '../utils';
 
@@ -26,9 +27,10 @@ export class Signature {
   }
 
   static aggregate(sigs: Signature[]): Signature {
-    const pts = sigs.map((s) => bls.Signature.fromBytes(new Uint8Array(s.sig)));
+    const pts = sigs.map(s => bls.Signature.fromBytes(new Uint8Array(s.sig)));
     const agg = bls.aggregateSignatures(pts);
-    return new Signature(new Uint8Array((agg as any).toBytes(true)));
+
+    return new Signature(agg.toBytes(true));
   }
 
   rawBytes(): Uint8Array {
@@ -46,6 +48,7 @@ export class Signature {
   static decode(reader: Reader): Signature {
     const data = reader.readFixedBytes(SIGNATURE_SIZE);
     const pt = bls.Signature.fromBytes(new Uint8Array(data));
-    return new Signature(new Uint8Array((pt as any).toBytes(true)));
+
+    return new Signature(pt.toBytes(true));
   }
 }

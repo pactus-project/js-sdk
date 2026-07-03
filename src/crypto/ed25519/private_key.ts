@@ -2,9 +2,9 @@ import { ed25519 as noble } from '@noble/curves/ed25519';
 
 import { decodeBase256WithType, encodeWithType } from '../utils';
 import { HRP } from '../hrp';
+
 import { PublicKey } from './public_key';
-import { Signature } from './signature';
-import { SIGNATURE_TYPE_ED25519 } from './signature';
+import { Signature, SIGNATURE_TYPE_ED25519 } from './signature';
 
 const PRIVATE_KEY_SIZE = 32;
 
@@ -29,9 +29,11 @@ export class PrivateKey {
     if (hrp !== HRP.PRIVATE_KEY_HRP) {
       throw new Error(`Invalid hrp: ${hrp}`);
     }
+
     if (type !== SIGNATURE_TYPE_ED25519) {
       throw new Error(`Invalid private key type: ${type}`);
     }
+
     if (data.length !== PRIVATE_KEY_SIZE) {
       throw new Error('Private key data must be 32 bytes long');
     }

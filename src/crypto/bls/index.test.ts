@@ -7,12 +7,14 @@ import { Address } from '../address';
 describe('BLS Crypto', () => {
   test('encoding', () => {
     const prvData = '000102030405060708090a0b0c0d0e0f101112131415161718191a1b1c1d1e1f';
-    const pubData = 'a7290fc800d2d14f2dc5e5cb416bebf3267dfed1c6c3a79c6edc4ebd1e657d956daa06a2fcaafd42c94b65b32d4d43ea1368f861006829c475b7d54763a502dfd717e9d51c5cc7deae2981e56090a821c9c5bcafc129b8599203ab99031f4ce7';
+    const pubData =
+      'a7290fc800d2d14f2dc5e5cb416bebf3267dfed1c6c3a79c6edc4ebd1e657d956daa06a2fcaafd42c94b65b32d4d43ea1368f861006829c475b7d54763a502dfd717e9d51c5cc7deae2981e56090a821c9c5bcafc129b8599203ab99031f4ce7';
     const valAddrData = '01c40b914373d4fc9c1e4611ad0acd5f23abf58a0d';
     const accAddrData = '02c40b914373d4fc9c1e4611ad0acd5f23abf58a0d';
 
     const prvStr = 'SECRET1PQQQSYQCYQ5RQWZQFPG9SCRGWPUGPZYSNZS23V9CCRYDPK8QARC0SEZYD4L';
-    const pubStr = 'public1p5u5sljqq6tg57tw9uh95z6lt7vn8mlk3cmp608rwm38t68n90k2km2sx5t724l2ze99ktvedf4p75ymglpssq6pfc36m0428vwjs9h7hzl5a28zucl02u2vpu4sfp2ppe8zmet7p9xu9nysr4wvsx86vuujrva2z';
+    const pubStr =
+      'public1p5u5sljqq6tg57tw9uh95z6lt7vn8mlk3cmp608rwm38t68n90k2km2sx5t724l2ze99ktvedf4p75ymglpssq6pfc36m0428vwjs9h7hzl5a28zucl02u2vpu4sfp2ppe8zmet7p9xu9nysr4wvsx86vuujrva2z';
     const valAddrStr = 'pc1pcs9ezsmn6n7fc8jxzxks4n2lyw4ltzsdc9v8qn';
     const accAddrStr = 'pc1zcs9ezsmn6n7fc8jxzxks4n2lyw4ltzsd9wu6hw';
 
@@ -153,12 +155,14 @@ describe('BLS Crypto', () => {
 
 function bytesToHex(bytes: Uint8Array): string {
   return Array.from(bytes)
-    .map((b) => b.toString(16).padStart(2, '0'))
+    .map(b => b.toString(16).padStart(2, '0'))
     .join('');
 }
 
 function hexToBytes(hex: string): Uint8Array {
-  if (!hex) return new Uint8Array(0);
+  if (!hex) {
+    return new Uint8Array(0);
+  }
   const bytes = new Uint8Array(hex.length / 2);
   for (let i = 0; i < hex.length; i += 2) {
     bytes[i / 2] = parseInt(hex.substring(i, i + 2), 16);

@@ -6,13 +6,14 @@ import type { Writer, Reader } from '../../encoding';
 import { Address, AddressType } from '../address';
 import { HRP } from '../hrp';
 import { decodeBase256WithType, encodeWithType } from '../utils';
-import { Signature } from './signature';
+
+import type { Signature } from './signature';
 import { SIGNATURE_TYPE_BLS, DST } from './signature';
 
 export const PUBLIC_KEY_SIZE = 96;
 
 const bls = bls12_381.shortSignatures;
-const G2 = bls12_381.G2.ProjectivePoint as any;
+const G2 = bls12_381.G2.Point;
 
 export class PublicKey {
   readonly point: Uint8Array;
@@ -31,9 +32,11 @@ export class PublicKey {
     if (hrp !== HRP.PUBLIC_KEY_HRP) {
       throw new Error(`Invalid hrp: ${hrp}`);
     }
+
     if (type !== SIGNATURE_TYPE_BLS) {
       throw new Error(`Invalid public key type: ${type}`);
     }
+
     if (data.length !== PUBLIC_KEY_SIZE) {
       throw new Error('Public key data must be 96 bytes long');
     }
@@ -42,8 +45,9 @@ export class PublicKey {
   }
 
   static aggregate(pubs: PublicKey[]): PublicKey {
-    const pts = pubs.map((p) => G2.fromBytes(new Uint8Array(p.point)));
+    const pts = pubs.map(p => G2.fromBytes(new Uint8Array(p.point)));
     const agg = bls.aggregatePublicKeys(pts);
+
     return new PublicKey(new Uint8Array(agg.toBytes(true)));
   }
 
@@ -74,6 +78,7 @@ export class PublicKey {
   private _makeAddress(addressType: AddressType): Address {
     const hash256 = blake2b(this.point, { dkLen: 32 });
     const hash160 = ripemd160(hash256);
+
     return new Address(addressType, new Uint8Array(hash160));
   }
 
@@ -81,6 +86,7 @@ export class PublicKey {
     const hashedMsg = bls.hash(msg, DST);
     const sigPoint = bls.Signature.fromBytes(new Uint8Array(sig.sig));
     const pubPoint = G2.fromBytes(new Uint8Array(this.point));
+
     return bls.verify(sigPoint, hashedMsg, pubPoint);
   }
 }

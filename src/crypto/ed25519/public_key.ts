@@ -6,7 +6,8 @@ import type { Writer, Reader } from '../../encoding';
 import { Address, AddressType } from '../address';
 import { HRP } from '../hrp';
 import { decodeBase256WithType, encodeWithType } from '../utils';
-import { Signature } from './signature';
+
+import type { Signature } from './signature';
 import { SIGNATURE_TYPE_ED25519 } from './signature';
 
 const PUBLIC_KEY_SIZE = 32;
@@ -24,9 +25,11 @@ export class PublicKey {
     if (hrp !== HRP.PUBLIC_KEY_HRP) {
       throw new Error(`Invalid hrp: ${hrp}`);
     }
+
     if (type !== SIGNATURE_TYPE_ED25519) {
       throw new Error(`Invalid public key type: ${type}`);
     }
+
     if (data.length !== PUBLIC_KEY_SIZE) {
       throw new Error('Public key data must be 32 bytes long');
     }
@@ -53,6 +56,7 @@ export class PublicKey {
   accountAddress(): Address {
     const hash256 = blake2b(this.pub, { dkLen: 32 });
     const hash160 = ripemd160(hash256);
+
     return new Address(AddressType.ED25519_ACCOUNT, hash160);
   }
 

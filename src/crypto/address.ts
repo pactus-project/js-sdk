@@ -1,11 +1,10 @@
-import { bech32m } from 'bech32';
-
 import type { Writer, Reader } from '../encoding';
+
+import { decodeBase256WithType, encodeWithType } from './utils';
+import { HRP } from './hrp';
 
 const ADDRESS_SIZE = 21;
 const TREASURY_ADDRESS_STRING = '000000000000000000000000000000000000000000';
-
-export const ADDRESS_HRP = 'pc';
 
 export enum AddressType {
   TREASURY = 0,
@@ -39,15 +38,11 @@ export class Address {
       return new Address(AddressType.TREASURY, new Uint8Array(20));
     }
 
-    const decoded = bech32m.decode(text);
+    const { hrp, type, data } = decodeBase256WithType(text);
 
-    if (decoded.prefix !== ADDRESS_HRP) {
-      throw new Error(`Invalid HRP: ${decoded.prefix}`);
+    if (hrp !== HRP.ADDRESS_HRP) {
+      throw new Error(`Invalid HRP: ${hrp}`);
     }
-
-    const type = decoded.words[0] as AddressType;
-    const dataWords = decoded.words.slice(1);
-    const data = new Uint8Array(bech32m.fromWords(dataWords));
 
     if (
       type === AddressType.VALIDATOR ||
@@ -76,12 +71,7 @@ export class Address {
       return TREASURY_ADDRESS_STRING;
     }
 
-    const type = this._data[0];
-    const data = this._data.slice(1);
-    const converted = bech32m.toWords(data);
-    const words = [type, ...converted];
-
-    return bech32m.encode(ADDRESS_HRP, words);
+    return encodeWithType(HRP.ADDRESS_HRP, this._data[0], this._data.slice(1));
   }
 
   /** Get the address type. */
