@@ -96,13 +96,7 @@ export class Address {
 
   /** Check if this is an account address. */
   isAccountAddress(): boolean {
-    const t = this.addressType();
-
-    return (
-      t === AddressType.TREASURY ||
-      t === AddressType.BLS_ACCOUNT ||
-      t === AddressType.ED25519_ACCOUNT
-    );
+    return !this.isValidatorAddress();
   }
 
   /** Check if this is a validator address. */

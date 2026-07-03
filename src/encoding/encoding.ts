@@ -108,11 +108,6 @@ export class Reader {
     this.buf = buf;
   }
 
-  /** Whether all bytes have been consumed. */
-  isEmpty(): boolean {
-    return this.offset >= this.buf.length;
-  }
-
   /** Read exactly `size` bytes from the stream. */
   private read(size: number): Uint8Array {
     if (this.offset + size > this.buf.length) {

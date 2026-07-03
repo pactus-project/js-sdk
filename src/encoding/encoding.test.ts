@@ -17,7 +17,6 @@ describe('encoding', () => {
 
           const r = new Reader(w.toBytes());
           expect(r.readUint8()).toBe(value);
-          expect(r.isEmpty()).toBe(true);
         });
       }
     });
@@ -39,7 +38,6 @@ describe('encoding', () => {
 
           const r = new Reader(w.toBytes());
           expect(r.readUint16()).toBe(value);
-          expect(r.isEmpty()).toBe(true);
         });
       }
     });
@@ -61,7 +59,6 @@ describe('encoding', () => {
 
           const r = new Reader(w.toBytes());
           expect(r.readUint32()).toBe(value);
-          expect(r.isEmpty()).toBe(true);
         });
       }
     });
@@ -95,45 +92,28 @@ describe('encoding', () => {
 
           const r = new Reader(w.toBytes());
           expect(r.readVarInt()).toBe(value);
-          expect(r.isEmpty()).toBe(true);
         });
       }
     });
 
     describe('str', () => {
-      it('should encode and decode empty string', () => {
-        const w = new Writer();
-        w.writeStr('');
-        expect(Array.from(w.toBytes())).toEqual([0x00]);
+      const str256 = 'test'.repeat(64);
+      const tests: Array<[string, number[]]> = [
+        ['', [0x00]],
+        ['Test', [0x04, ...new TextEncoder().encode('Test')]],
+        [str256, [0x80, 0x02, ...new TextEncoder().encode(str256)]],
+      ];
 
-        const r = new Reader(w.toBytes());
-        expect(r.readStr()).toBe('');
-        expect(r.isEmpty()).toBe(true);
-      });
+      for (const [value, expectedBytes] of tests) {
+        it(`should encode and decode "${value.length > 20 ? `${value.substring(0, 20)}...` : value}"`, () => {
+          const w = new Writer();
+          w.writeStr(value);
+          expect(Array.from(w.toBytes())).toEqual(expectedBytes);
 
-      it('should encode and decode "Test"', () => {
-        const w = new Writer();
-        w.writeStr('Test');
-        expect(Array.from(w.toBytes())).toEqual([0x04, ...new TextEncoder().encode('Test')]);
-
-        const r = new Reader(w.toBytes());
-        expect(r.readStr()).toBe('Test');
-        expect(r.isEmpty()).toBe(true);
-      });
-
-      it('should encode and decode a 256-character string', () => {
-        const str256 = 'test'.repeat(64);
-        const w = new Writer();
-        w.writeStr(str256);
-
-        // Length 256 is encoded as varint: 256 = 0x100 -> varint: [0x80, 0x02]
-        const expected = new Uint8Array([0x80, 0x02, ...new TextEncoder().encode(str256)]);
-        expect(Array.from(w.toBytes())).toEqual(Array.from(expected));
-
-        const r = new Reader(w.toBytes());
-        expect(r.readStr()).toBe(str256);
-        expect(r.isEmpty()).toBe(true);
-      });
+          const r = new Reader(w.toBytes());
+          expect(r.readStr()).toBe(value);
+        });
+      }
     });
   });
 });
