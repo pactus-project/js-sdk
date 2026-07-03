@@ -191,13 +191,13 @@ export class Amount {
   }
 
   /** Encode the amount as a varint to the writer. */
-  encode(writer: Writer): void {
-    writer.writeVarInt(BigInt(this.value));
+  encode(w: Writer): void {
+    w.writeVarInt(BigInt(this.value));
   }
 
   /** Decode an Amount from the reader. */
-  static decode(reader: Reader): Amount {
-    const val = reader.readVarInt();
+  static decode(r: Reader): Amount {
+    const val = r.readVarInt();
 
     return new Amount(val.toString());
   }

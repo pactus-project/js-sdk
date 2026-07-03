@@ -12,18 +12,18 @@ export class BondPayload {
     public readonly stake: Amount
   ) {}
 
-  encode(writer: Writer): void {
-    this.sender.encode(writer);
-    this.receiver.encode(writer);
+  encode(w: Writer): void {
+    this.sender.encode(w);
+    this.receiver.encode(w);
 
     if (this.publicKey === null) {
-      writer.writeVarInt(0);
+      w.writeVarInt(0);
     } else {
-      writer.writeVarInt(96);
-      writer.writeFixedBytes(this.publicKey);
+      w.writeVarInt(96);
+      w.writeFixedBytes(this.publicKey);
     }
 
-    this.stake.encode(writer);
+    this.stake.encode(w);
   }
 
   getType(): PayloadType {
@@ -34,19 +34,19 @@ export class BondPayload {
     return this.sender;
   }
 
-  static decode(reader: Reader): BondPayload {
-    const sender = Address.decode(reader);
-    const receiver = Address.decode(reader);
-    const pubKeySize = reader.readVarInt();
+  static decode(r: Reader): BondPayload {
+    const sender = Address.decode(r);
+    const receiver = Address.decode(r);
+    const pubKeySize = r.readVarInt();
     let publicKey: Uint8Array | null = null;
 
     if (pubKeySize === 96n) {
-      publicKey = reader.readFixedBytes(96);
+      publicKey = r.readFixedBytes(96);
     } else if (pubKeySize !== 0n) {
       throw new Error(`invalid public key size: ${pubKeySize}`);
     }
 
-    const stake = Amount.decode(reader);
+    const stake = Amount.decode(r);
 
     return new BondPayload(sender, receiver, publicKey, stake);
   }

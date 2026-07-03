@@ -1,13 +1,13 @@
 import { Address } from '../../crypto/address';
-import type { Writer, Reader } from '../../encoding';
+import type { Writer as w, Reader } from '../../encoding';
 
 import { PayloadType } from './_payload';
 
 export class UnbondPayload {
   constructor(public readonly validator: Address) {}
 
-  encode(writer: Writer): void {
-    this.validator.encode(writer);
+  encode(w: w): void {
+    this.validator.encode(w);
   }
 
   getType(): PayloadType {
@@ -18,8 +18,8 @@ export class UnbondPayload {
     return this.validator;
   }
 
-  static decode(reader: Reader): UnbondPayload {
-    const validator = Address.decode(reader);
+  static decode(r: Reader): UnbondPayload {
+    const validator = Address.decode(r);
 
     return new UnbondPayload(validator);
   }

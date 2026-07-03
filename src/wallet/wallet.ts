@@ -1,16 +1,22 @@
 import * as crypto from 'crypto';
 
 import * as bip39 from 'bip39';
+import { bech32m } from 'bech32';
 import type { WalletCore } from '@trustwallet/wallet-core';
 import type { HDWallet } from '@trustwallet/wallet-core/dist/src/wallet-core';
 
 import { Amount } from '../types/amount';
+import { Height } from '../types/height';
+import { Address } from '../crypto/address';
 import type {
   RawTransferTransaction,
   TransferTransaction,
   BondTransaction,
-} from '../transaction/transaction';
-import { TransactionDetailsType } from '../transaction/transaction';
+} from '../transaction';
+import { Transaction, TransactionDetailsType, FLAG_NOT_SIGNED } from '../transaction';
+import { Writer } from '../encoding';
+
+import { bytesToHex } from '../crypto/utils';
 
 import { Encrypter } from './encrypter/encrypter';
 import { MnemonicError, StorageError, NetworkError } from './error';
@@ -589,7 +595,7 @@ export class Wallet {
       fee: calculatedFee,
       memo: memo ?? '', // Ensure memo is always a string
     };
-    const rawTxHex = await this.getRawTransferTransaction(tx);
+    const rawTxHex = this.getRawTransferTransaction(tx);
 
     // Sign transaction
     const { signedRawTxHex } = await this.signTransaction(
@@ -644,7 +650,7 @@ export class Wallet {
       // eslint-disable-next-line @typescript-eslint/naming-convention
       public_key: publicKey ?? '',
     };
-    const rawTxHex = await this.getRawBondTransaction(tx);
+    const rawTxHex = this.getRawBondTransaction(tx);
 
     // Sign transaction
     const { signedRawTxHex } = await this.signTransaction(
@@ -658,39 +664,31 @@ export class Wallet {
   }
 
   /**
-   * Get raw transfer transaction hex
+   * Get raw transfer transaction hex — built locally, no RPC.
    */
-  private async getRawTransferTransaction(
+  private getRawTransferTransaction(
     tx: TransferTransaction
-  ): Promise<RawTransferTransaction> {
-    const txParams = {
-      sender: tx.sender,
-      receiver: tx.receiver,
-      amount: Number(tx.amount.toString()), // Convert to number
-      fee: Number(tx.fee.toString()), // Convert to number
-      memo: tx.memo || '',
+  ): RawTransferTransaction {
+    const sender = Address.fromString(tx.sender);
+    const receiver = Address.fromString(tx.receiver);
+    const lockTime = new Height(0);
+
+    const txn = Transaction.createTransferTx(
+      lockTime,
+      sender,
+      receiver,
+      tx.amount,
+      tx.fee,
+      tx.memo ?? ''
+    );
+
+    txn.flags = FLAG_NOT_SIGNED;
+
+    return {
+      // eslint-disable-next-line @typescript-eslint/naming-convention
+      raw_transaction: bytesToHex(this.encodeTx(txn)),
+      id: bytesToHex(txn.id()),
     };
-
-    try {
-      const result = await this.withFailover(client =>
-        client.pactusTransactionGetRawTransferTransaction(
-          undefined,
-          txParams.sender,
-          txParams.receiver,
-          txParams.amount,
-          txParams.fee,
-          txParams.memo
-        )
-      );
-
-      return {
-        // eslint-disable-next-line @typescript-eslint/naming-convention
-        raw_transaction: result.raw_transaction ?? '',
-        id: result.id ?? '',
-      };
-    } catch (error) {
-      throw new NetworkError(`Failed to get raw transfer transaction: ${error}`);
-    }
   }
 
   /**
@@ -713,40 +711,31 @@ export class Wallet {
   }
 
   /**
-   * Get raw bond transaction hex
+   * Get raw bond transaction hex — built locally, no RPC.
    */
-  private async getRawBondTransaction(tx: BondTransaction): Promise<RawTransferTransaction> {
-    const txParams = {
-      sender: tx.sender,
-      receiver: tx.receiver,
-      stake: Number(tx.stake.toString()), // Convert to number
-      fee: Number(tx.fee.toString()), // Convert to number
-      memo: tx.memo || '',
+  private getRawBondTransaction(tx: BondTransaction): RawTransferTransaction {
+    const sender = Address.fromString(tx.sender);
+    const receiver = Address.fromString(tx.receiver);
+    const lockTime = new Height(0);
+    const publicKeyBytes = decodeBech32PublicKey(tx.public_key);
+
+    const txn = Transaction.createBondTx(
+      lockTime,
+      sender,
+      receiver,
+      publicKeyBytes,
+      tx.fee,
+      tx.stake,
+      tx.memo ?? ''
+    );
+
+    txn.flags = FLAG_NOT_SIGNED;
+
+    return {
       // eslint-disable-next-line @typescript-eslint/naming-convention
-      public_key: tx.public_key,
+      raw_transaction: bytesToHex(this.encodeTx(txn)),
+      id: bytesToHex(txn.id()),
     };
-
-    try {
-      const result = await this.withFailover(client =>
-        client.pactusTransactionGetRawBondTransaction(
-          undefined,
-          txParams.sender,
-          txParams.receiver,
-          txParams.stake,
-          txParams.public_key,
-          txParams.fee,
-          txParams.memo
-        )
-      );
-
-      return {
-        // eslint-disable-next-line @typescript-eslint/naming-convention
-        raw_transaction: result.raw_transaction ?? '',
-        id: result.id ?? '',
-      };
-    } catch (error) {
-      throw new NetworkError(`Failed to get raw bond transaction: ${error}`);
-    }
   }
 
   /**

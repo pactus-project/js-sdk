@@ -9,9 +9,9 @@ export class SortitionPayload {
     public readonly proof: Uint8Array
   ) {}
 
-  encode(writer: Writer): void {
-    this.address.encode(writer);
-    writer.writeFixedBytes(this.proof);
+  encode(w: Writer): void {
+    this.address.encode(w);
+    w.writeFixedBytes(this.proof);
   }
 
   getType(): PayloadType {
@@ -22,9 +22,9 @@ export class SortitionPayload {
     return this.address;
   }
 
-  static decode(reader: Reader): SortitionPayload {
-    const address = Address.decode(reader);
-    const proof = reader.readFixedBytes(48);
+  static decode(r: Reader): SortitionPayload {
+    const address = Address.decode(r);
+    const proof = r.readFixedBytes(48);
 
     return new SortitionPayload(address, proof);
   }
