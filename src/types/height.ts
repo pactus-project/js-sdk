@@ -14,12 +14,12 @@ export class Height {
   }
 
   /** Encode the height as uint32 (little-endian) to the writer. */
-  encode(writer: Writer): void {
-    writer.writeUint32(this.value);
+  encode(w: Writer): void {
+    w.writeUint32(this.value);
   }
 
   /** Decode a Height from the reader. */
-  static decode(reader: Reader): Height {
-    return new Height(reader.readUint32());
+  static decode(r: Reader): Height {
+    return new Height(r.readUint32());
   }
 }

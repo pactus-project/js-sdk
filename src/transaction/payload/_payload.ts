@@ -11,7 +11,7 @@ export enum PayloadType {
 }
 
 export interface Payload {
-  encode(writer: Writer): void;
+  encode(w: Writer): void;
   getType(): PayloadType;
   signer(): Address;
 }

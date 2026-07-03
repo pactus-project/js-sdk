@@ -105,23 +105,23 @@ export class Address {
   }
 
   /** Encode the address to the writer. */
-  encode(writer: Writer): void {
+  encode(w: Writer): void {
     if (this.isTreasuryAddress()) {
-      writer.writeUint8(AddressType.TREASURY);
+      w.writeUint8(AddressType.TREASURY);
     } else {
-      writer.writeFixedBytes(this.rawBytes());
+      w.writeFixedBytes(this.rawBytes());
     }
   }
 
   /** Decode an Address from the reader. */
-  static decode(reader: Reader): Address {
-    const addrType = reader.readUint8();
+  static decode(r: Reader): Address {
+    const addrType = r.readUint8();
 
     if (addrType === AddressType.TREASURY) {
       return new Address(AddressType.TREASURY, new Uint8Array(20));
     }
 
-    const data = reader.readFixedBytes(20);
+    const data = r.readFixedBytes(20);
 
     return new Address(addrType as AddressType, data);
   }

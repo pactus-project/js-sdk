@@ -68,7 +68,8 @@ export interface RawTransferTransaction {
 // ---- Transaction implementation ----
 
 const FLAG_STRIPPED_PUBLIC_KEY = 0x01;
-const FLAG_NOT_SIGNED = 0x02;
+
+export const FLAG_NOT_SIGNED = 0x02;
 
 export class Transaction {
   public flags: number;
@@ -92,31 +93,31 @@ export class Transaction {
   }
 
   /** Decode a Transaction from the reader. */
-  static decode(reader: Reader): Transaction {
-    const flags = reader.readUint8();
-    const version = reader.readUint8();
-    const lockTime = Height.decode(reader);
-    const fee = Amount.decode(reader);
-    const memo = reader.readStr();
-    const payloadType = reader.readUint8();
+  static decode(r: Reader): Transaction {
+    const flags = r.readUint8();
+    const version = r.readUint8();
+    const lockTime = Height.decode(r);
+    const fee = Amount.decode(r);
+    const memo = r.readStr();
+    const payloadType = r.readUint8();
 
     let payload: Payload;
 
     switch (payloadType) {
       case PayloadType.TRANSFER:
-        payload = TransferPayload.decode(reader);
+        payload = TransferPayload.decode(r);
         break;
       case PayloadType.BOND:
-        payload = BondPayload.decode(reader);
+        payload = BondPayload.decode(r);
         break;
       case PayloadType.SORTITION:
-        payload = SortitionPayload.decode(reader);
+        payload = SortitionPayload.decode(r);
         break;
       case PayloadType.UNBOND:
-        payload = UnbondPayload.decode(reader);
+        payload = UnbondPayload.decode(r);
         break;
       case PayloadType.WITHDRAW:
-        payload = WithdrawPayload.decode(reader);
+        payload = WithdrawPayload.decode(r);
         break;
       default:
         throw new Error(`unknown payload type: ${payloadType}`);
@@ -136,12 +137,12 @@ export class Transaction {
     const signerType = payload.signer().addressType();
     const sigSize = getSignatureSize(signerType);
 
-    tx.signature = reader.readFixedBytes(sigSize);
+    tx.signature = r.readFixedBytes(sigSize);
 
     if ((flags & FLAG_STRIPPED_PUBLIC_KEY) === 0) {
       const pubSize = getPublicKeySize(signerType);
 
-      tx.publicKey = reader.readFixedBytes(pubSize);
+      tx.publicKey = r.readFixedBytes(pubSize);
     }
 
     return tx;
@@ -198,21 +199,21 @@ export class Transaction {
   }
 
   /** Write the unsigned bytes of the transaction to the writer. */
-  private writeUnsignedBytes(writer: Writer): void {
-    writer.writeUint8(this.flags);
-    writer.writeUint8(this.version);
-    this.lockTime.encode(writer);
-    this.fee.encode(writer);
-    writer.writeStr(this.memo);
-    writer.writeUint8(this.payload.getType());
-    this.payload.encode(writer);
+  encode(w: Writer): void {
+    w.writeUint8(this.flags);
+    w.writeUint8(this.version);
+    this.lockTime.encode(w);
+    this.fee.encode(w);
+    w.writeStr(this.memo);
+    w.writeUint8(this.payload.getType());
+    this.payload.encode(w);
   }
 
   /** Return the bytes to be signed (everything except flags). */
   signBytes(): Uint8Array {
     const w = new Writer();
 
-    this.writeUnsignedBytes(w);
+    this.encode(w);
 
     return w.toBytes().slice(1);
   }

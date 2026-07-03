@@ -11,10 +11,10 @@ export class WithdrawPayload {
     public readonly amount: Amount
   ) {}
 
-  encode(writer: Writer): void {
-    this.fromAddr.encode(writer);
-    this.toAddr.encode(writer);
-    this.amount.encode(writer);
+  encode(w: Writer): void {
+    this.fromAddr.encode(w);
+    this.toAddr.encode(w);
+    this.amount.encode(w);
   }
 
   getType(): PayloadType {
@@ -25,10 +25,10 @@ export class WithdrawPayload {
     return this.fromAddr;
   }
 
-  static decode(reader: Reader): WithdrawPayload {
-    const fromAddr = Address.decode(reader);
-    const toAddr = Address.decode(reader);
-    const amount = Amount.decode(reader);
+  static decode(r: Reader): WithdrawPayload {
+    const fromAddr = Address.decode(r);
+    const toAddr = Address.decode(r);
+    const amount = Amount.decode(r);
 
     return new WithdrawPayload(fromAddr, toAddr, amount);
   }
