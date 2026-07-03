@@ -34,7 +34,7 @@ describe('sprintf function', () => {
       "should encode data with hrp '%s', type %d, and match expected output'",
       (prefix, hex, type, expected) => {
         const data = Buffer.from(hex, 'hex');
-        const encoded = encodeBech32WithType(prefix, data, type);
+        const encoded = encodeBech32WithType(prefix, type, data);
 
         expect(encoded).toBe(expected);
       }

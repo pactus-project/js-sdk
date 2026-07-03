@@ -1,6 +1,6 @@
 import type { Writer, Reader } from '../encoding';
 
-import { decodeBase256WithType, encodeWithType } from './utils';
+import { decodeWithType, encodeWithType } from './utils';
 import { HRP } from './hrp';
 
 const ADDRESS_SIZE = 21;
@@ -38,7 +38,7 @@ export class Address {
       return new Address(AddressType.TREASURY, new Uint8Array(20));
     }
 
-    const { hrp, type, data } = decodeBase256WithType(text);
+    const { hrp, type, data } = decodeWithType(text);
 
     if (hrp !== HRP.ADDRESS_HRP) {
       throw new Error(`Invalid HRP: ${hrp}`);

@@ -1,7 +1,7 @@
 import { bls12_381 } from '@noble/curves/bls12-381';
 import { sha256 } from '@noble/hashes/sha2';
 
-import { decodeBase256WithType, encodeWithType } from '../utils';
+import { decodeWithType, encodeWithType } from '../utils';
 import { HRP } from '../hrp';
 
 import { PublicKey } from './public_key';
@@ -56,7 +56,7 @@ export class PrivateKey {
   }
 
   static fromString(text: string): PrivateKey {
-    const { hrp, type, data } = decodeBase256WithType(text);
+    const { hrp, type, data } = decodeWithType(text);
 
     if (hrp !== HRP.PRIVATE_KEY_HRP) {
       throw new Error(`Invalid hrp: ${hrp}`);

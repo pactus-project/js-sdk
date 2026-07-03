@@ -1,5 +1,3 @@
-import { bech32m } from 'bech32';
-
 /**
  * Generate a simple UUID
  * Fallback method when crypto.randomUUID is not available
@@ -35,18 +33,4 @@ export function getWordCount(phrase: string): number {
   return phrase.trim().split(/\s+/).length;
 }
 
-/**
- * Encodes arbitrary data into a Bech32 string with a type and prefix.
- *
- * @param prefix - Human-readable part (prefix) for the Bech32 encoding.
- * @param data - Buffer containing the data to encode.
- * @param type - A numeric identifier **prepended** to the encoded words.
- * @returns The Bech32-encoded string.
- */
-export function encodeBech32WithType(prefix: string, data: Uint8Array, type: number): string {
-  const words = bech32m.toWords(data);
-
-  words.unshift(type);
-
-  return bech32m.encode(prefix, words);
-}
+export { encodeWithType as encodeBech32WithType } from '../crypto/utils';

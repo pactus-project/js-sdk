@@ -5,7 +5,7 @@ import { ripemd160 } from '@noble/hashes/legacy';
 import type { Writer, Reader } from '../../encoding';
 import { Address, AddressType } from '../address';
 import { HRP } from '../hrp';
-import { decodeBase256WithType, encodeWithType } from '../utils';
+import { decodeWithType, encodeWithType } from '../utils';
 
 import type { Signature } from './signature';
 import { SIGNATURE_TYPE_ED25519 } from './signature';
@@ -20,7 +20,7 @@ export class PublicKey {
   }
 
   static fromString(text: string): PublicKey {
-    const { hrp, type, data } = decodeBase256WithType(text);
+    const { hrp, type, data } = decodeWithType(text);
 
     if (hrp !== HRP.PUBLIC_KEY_HRP) {
       throw new Error(`Invalid hrp: ${hrp}`);

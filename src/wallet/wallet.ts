@@ -332,7 +332,7 @@ export class Wallet {
     ).description();
 
     const prefix = this.publicKeyPrefix();
-    const publicKeyStr = encodeBech32WithType(prefix, publicKey.data(), SignatureType.Ed25519);
+    const publicKeyStr = encodeBech32WithType(prefix, SignatureType.Ed25519, publicKey.data());
 
     return {
       address,
@@ -422,7 +422,7 @@ export class Wallet {
       const privateKey = hdWallet.getKey(this.core.CoinType.pactus, addressPath);
       const prefix = this.privateKeyPrefix();
 
-      const privateKeyStr = encodeBech32WithType(prefix, privateKey.data(), SignatureType.Ed25519);
+      const privateKeyStr = encodeBech32WithType(prefix, SignatureType.Ed25519, privateKey.data());
 
       return privateKeyStr.toUpperCase();
     } catch (error) {

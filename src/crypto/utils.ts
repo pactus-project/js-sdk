@@ -1,6 +1,6 @@
 import { bech32m } from 'bech32';
 
-export function decodeBase256WithType(
+export function decodeWithType(
   text: string,
   limit = 90
 ): { hrp: string; type: number; data: Uint8Array } {
