@@ -1,0 +1,57 @@
+import { ed25519 as noble } from '@noble/curves/ed25519';
+
+import { decodeBase256WithType, encodeWithType } from '../utils';
+import { HRP } from '../hrp';
+import { PublicKey } from './public_key';
+import { Signature } from './signature';
+import { SIGNATURE_TYPE_ED25519 } from './signature';
+
+const PRIVATE_KEY_SIZE = 32;
+
+export class PrivateKey {
+  readonly scalar: Uint8Array;
+
+  constructor(scalar: Uint8Array) {
+    this.scalar = scalar;
+  }
+
+  static fromBytes(buffer: Uint8Array): PrivateKey {
+    return new PrivateKey(buffer);
+  }
+
+  static random(): PrivateKey {
+    return new PrivateKey(noble.utils.randomSecretKey());
+  }
+
+  static fromString(text: string): PrivateKey {
+    const { hrp, type, data } = decodeBase256WithType(text);
+
+    if (hrp !== HRP.PRIVATE_KEY_HRP) {
+      throw new Error(`Invalid hrp: ${hrp}`);
+    }
+    if (type !== SIGNATURE_TYPE_ED25519) {
+      throw new Error(`Invalid private key type: ${type}`);
+    }
+    if (data.length !== PRIVATE_KEY_SIZE) {
+      throw new Error('Private key data must be 32 bytes long');
+    }
+
+    return new PrivateKey(data);
+  }
+
+  rawBytes(): Uint8Array {
+    return this.scalar;
+  }
+
+  string(): string {
+    return encodeWithType(HRP.PRIVATE_KEY_HRP, SIGNATURE_TYPE_ED25519, this.scalar);
+  }
+
+  publicKey(): PublicKey {
+    return new PublicKey(noble.getPublicKey(this.scalar));
+  }
+
+  sign(msg: Uint8Array): Signature {
+    return new Signature(noble.sign(msg, this.scalar));
+  }
+}
