@@ -9,6 +9,13 @@ import { getWordCount } from './utils';
 import { Wallet } from './wallet';
 import type { IStorage } from './storage/storage';
 import type { WalletCore } from '@trustwallet/wallet-core';
+import { Address } from '../crypto/address';
+import { HRP } from '../crypto/hrp';
+import { Amount } from '../types/amount';
+import { Height } from '../types/height';
+import { Transaction, FLAG_NOT_SIGNED } from '../transaction';
+import { Writer, Reader } from '../encoding';
+import { bytesToHex } from '../crypto/utils';
 // Jest typings setup
 declare global {
   // eslint-disable-next-line @typescript-eslint/no-namespace
@@ -534,19 +541,46 @@ describe('Pactus Wallet Tests', () => {
       // Create an address to get its path
       const addrInfo = await wallet.createAddress('Test Address', password);
 
-      // Test transaction raw hex with correct flag byte (0x02 for unsigned)
-      const rawTxHex = '020000000000000001000000000000000100000000000000';
+      // The wallet uses testnet addresses, so set HRP to testnet for Address.fromString
+      HRP.useTestnet();
+
+      // Build a proper unsigned transfer transaction using the wallet's address
+      const senderAddr = Address.fromString(addrInfo.address);
+      const receiverAddr = Address.fromString(addrInfo.address); // self-transfer for test
+      const lockTime = new Height(0);
+      const amount = Amount.zero();
+      const fee = Amount.zero();
+
+      const txn = Transaction.createTransferTx(lockTime, senderAddr, receiverAddr, amount, fee);
+
+      txn.flags = FLAG_NOT_SIGNED;
+      const rawTxHex = bytesToHex(
+        (() => {
+          const w = new Writer();
+
+          txn.encode(w);
+
+          return w.toBytes();
+        })()
+      );
 
       // Sign the transaction
       const { signedRawTxHex } = await wallet.signTransaction(rawTxHex, addrInfo.path, password);
 
-      // Verify the result is not empty and has expected format
+      // Verify the signed hex is longer (includes signature + public key)
       expect(signedRawTxHex).toBeTruthy();
       expect(signedRawTxHex.length).toBeGreaterThan(rawTxHex.length);
 
-      // The signed transaction should start with 0x00 (signed flag) followed by the transaction data without the flag byte
-      expect(signedRawTxHex.startsWith('00')).toBe(true);
-      expect(signedRawTxHex.substring(2, rawTxHex.length)).toBe(rawTxHex.substring(2));
+      // Decode the signed bytes and verify
+      const decoded = Transaction.decode(new Reader(Buffer.from(signedRawTxHex, 'hex')));
+
+      expect(decoded.flags & FLAG_NOT_SIGNED).toBe(0);
+      expect(decoded.signature).not.toBeNull();
+      expect(decoded.publicKey).not.toBeNull();
+      expect(decoded.verify()).toBe(true);
+
+      // Restore mainnet HRP
+      HRP.useMainnet();
     });
 
     it('should throw an error for empty raw transaction', async () => {

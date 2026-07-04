@@ -4,7 +4,7 @@
  */
 
 export * from './wallet';
-export * from './transaction/transaction';
+export * from './transaction';
 export * from './transaction/payload';
 export { Address } from './crypto/address';
 export { Amount } from './types/amount';
