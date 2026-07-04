@@ -1,5 +1,5 @@
 import { Transaction, FLAG_NOT_SIGNED } from './transaction';
-import { Address, AddressType } from '../crypto/address';
+import { Address } from '../crypto/address';
 import { Amount } from '../types/amount';
 import { Height } from '../types/height';
 import { Reader, Writer } from '../encoding';
