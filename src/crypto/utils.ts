@@ -44,10 +44,7 @@ export function hexToBytes(hex: string): Uint8Array {
  *
  * Validates the HRP against the given value (default "public" for mainnet).
  */
-export function decodeBech32PublicKey(
-  text: string,
-  expectedHrp: string = 'public'
-): Uint8Array {
+export function decodeBech32PublicKey(text: string, expectedHrp: string = 'public'): Uint8Array {
   const { hrp, data } = decodeWithType(text);
 
   if (hrp !== expectedHrp) {

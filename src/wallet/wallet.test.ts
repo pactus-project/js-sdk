@@ -551,13 +551,7 @@ describe('Pactus Wallet Tests', () => {
       const amount = Amount.zero();
       const fee = Amount.zero();
 
-      const txn = Transaction.createTransferTx(
-        lockTime,
-        senderAddr,
-        receiverAddr,
-        amount,
-        fee
-      );
+      const txn = Transaction.createTransferTx(lockTime, senderAddr, receiverAddr, amount, fee);
 
       txn.flags = FLAG_NOT_SIGNED;
       const rawTxHex = bytesToHex(
@@ -578,9 +572,7 @@ describe('Pactus Wallet Tests', () => {
       expect(signedRawTxHex.length).toBeGreaterThan(rawTxHex.length);
 
       // Decode the signed bytes and verify
-      const decoded = Transaction.decode(
-        new Reader(Buffer.from(signedRawTxHex, 'hex'))
-      );
+      const decoded = Transaction.decode(new Reader(Buffer.from(signedRawTxHex, 'hex')));
 
       expect(decoded.flags & FLAG_NOT_SIGNED).toBe(0);
       expect(decoded.signature).not.toBeNull();

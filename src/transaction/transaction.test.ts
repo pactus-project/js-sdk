@@ -45,9 +45,9 @@ describe('Transaction', () => {
       expect(tx.publicKey).not.toBeNull();
 
       // Signature is 64 bytes (ED25519_ACCOUNT)
-      expect(tx.signature!.rawBytes().length).toBe(64);
+      expect(tx.signature?.rawBytes().length).toBe(64);
       // Public key is 32 bytes (ED25519_ACCOUNT)
-      expect(tx.publicKey!.rawBytes().length).toBe(32);
+      expect(tx.publicKey?.rawBytes().length).toBe(32);
 
       // Transaction ID
       expect(bytesToHex(tx.id())).toBe(expectedTxId);
@@ -97,9 +97,9 @@ describe('Transaction', () => {
       expect(tx.publicKey).not.toBeNull();
 
       // Signature is 64 bytes (ED25519_ACCOUNT)
-      expect(tx.signature!.rawBytes().length).toBe(64);
+      expect(tx.signature?.rawBytes().length).toBe(64);
       // Public key is 32 bytes (ED25519_ACCOUNT)
-      expect(tx.publicKey!.rawBytes().length).toBe(32);
+      expect(tx.publicKey?.rawBytes().length).toBe(32);
 
       // Transaction ID
       expect(bytesToHex(tx.id())).toBe(expectedTxId);

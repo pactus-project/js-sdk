@@ -7,14 +7,9 @@ import type { HDWallet } from '@trustwallet/wallet-core/dist/src/wallet-core';
 import { Amount } from '../types/amount';
 import { Height } from '../types/height';
 import { Address } from '../crypto/address';
-import type {
-  RawTransferTransaction,
-  TransferTransaction,
-  BondTransaction,
-} from '../transaction';
+import type { RawTransferTransaction, TransferTransaction, BondTransaction } from '../transaction';
 import { Transaction, TransactionDetailsType, FLAG_NOT_SIGNED } from '../transaction';
 import { Writer, Reader } from '../encoding';
-
 import { bytesToHex, decodeBech32PublicKey } from '../crypto/utils';
 import { PrivateKey as Ed25519PrivateKey } from '../crypto/ed25519/private_key';
 
@@ -677,9 +672,7 @@ export class Wallet {
   /**
    * Get raw transfer transaction hex — built locally, no RPC.
    */
-  private getRawTransferTransaction(
-    tx: TransferTransaction
-  ): RawTransferTransaction {
+  private getRawTransferTransaction(tx: TransferTransaction): RawTransferTransaction {
     const sender = Address.fromString(tx.sender);
     const receiver = Address.fromString(tx.receiver);
     const lockTime = new Height(0);
@@ -777,9 +770,7 @@ export class Wallet {
     // Derive the ed25519 private key from the HD wallet
     const hdWallet = await this.hdWallet(password);
     const twPrivateKey = hdWallet.getKey(this.core.CoinType.pactus, addressPath);
-    const privKey = new Ed25519PrivateKey(
-      new Uint8Array(twPrivateKey.data())
-    );
+    const privKey = new Ed25519PrivateKey(new Uint8Array(twPrivateKey.data()));
 
     // Sign the transaction
     txn.sign(privKey);
