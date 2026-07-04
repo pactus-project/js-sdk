@@ -6,7 +6,6 @@ import { Reader, Writer } from '../encoding';
 import type { TransferPayload, BondPayload } from './payload';
 import { PayloadType } from './payload';
 import { PrivateKey as Ed25519PrivateKey } from '../crypto/ed25519/private_key';
-import { PublicKey as Ed25519PublicKey } from '../crypto/ed25519/public_key';
 
 describe('Transaction', () => {
   describe('decode transfer transaction', () => {
